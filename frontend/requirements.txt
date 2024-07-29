@@ -1,0 +1,4 @@
+streamlit==1.22.0
+st-clickable-images==0.0.3
+gdown
+open_clip_torch
