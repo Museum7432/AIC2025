@@ -1,7 +1,9 @@
+import sys
+sys.path.append("")
 import streamlit as st
 from st_clickable_images import clickable_images
 
-import utils
+from frontend import utils
 from typing import List, Tuple
 from PIL import Image
 import os 
@@ -20,17 +22,17 @@ def extrac_name_file_img(key_fr_id,video_name):
 def read_image(results: List[dict]) -> List[Image.Image]:
     images = []
     image_names = []
-    IMAGE_KEYFRAME_PATH = "/app/KeyFrames"  # Đường dẫn đến thư mục chứa keyframes
+    IMAGE_KEYFRAME_PATH = "dataset"  # Đường dẫn đến thư mục chứa keyframes
     
        
-
+    
     results= sorted(results, key=lambda k: k['score'])
-    for res in results:
-       
+    print(results)
+    for res in results:      
 
         video_name = res["video_name"]
-        folder_name = "keyframes_"+ video_name[:3]
-     
+        folder_name = video_name[:3]
+
        
         video_folder=os.path.join(IMAGE_KEYFRAME_PATH,folder_name, video_name)
         
@@ -79,7 +81,7 @@ def main() -> None:
 
         return 
     
-
+    
 
     st.subheader("Query Results")
     img_result = utils.send_request(query, k, model_choice)

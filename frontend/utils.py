@@ -27,13 +27,15 @@ def fetch_image_bytes(url: str) -> bytes:
 def send_request(query: str, k: int, model_choice: str) -> list[str]:
     """Send request to backend and return list of image URLs."""
     try:
-        url = "http://35.223.182.198:8000/search"
+        url = "http://0.0.0.0:8000/search"
         payload = {"query": [query], "k": k, "model": model_choice}
         response = requests.post(url, json=payload)
     except:
-        url = "http://35.223.182.198:8000/search"
+        url = "http://0.0.0.0:8000/search"
         payload = {"query": [query], "k": k, "model": model_choice}
         response = requests.post(url, json=payload)
+    print(dir(response))
+    print(response)
     return response.json()
 
 def encode_image(image_bytes: bytes) -> str:

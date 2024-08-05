@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 
-from api.utils import load_model, index_to_url, load_model_open
+from src.utils.utils import load_model, index_to_url, load_model_open
 from open_clip import create_model_from_pretrained, get_tokenizer, create_model_and_transforms
 
 

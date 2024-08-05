@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 
-from api.utils import load_model, index_to_url, load_model_open
+from src.utils.utils import load_model, index_to_url, load_model_open
 from lavis.models import load_model_and_preprocess
 
 
