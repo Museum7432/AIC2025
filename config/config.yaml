@@ -1,0 +1,7 @@
+EMB_PATH:
+    BLIP2_VITG : data/embeddings/blip2_feature_extractor-ViTG
+    BLIP2_COCO : data/embeddings/blip2_image_text_matching-coco
+    BLIP2_VITL : data/embeddings/blip2_image_text_matching-vitL
+    VIT_BIGG : data/embeddings/ViT-bigG-14-CLIPA-336-datacomp1b
+    VIT_H : data/embeddings/ViT-H-14-378-quickgelu-dfn5b
+    VIT_G : data/embeddings/ViT-L-14-quickgelu-dfn5b

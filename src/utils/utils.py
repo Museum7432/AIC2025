@@ -9,6 +9,14 @@ import pandas as pd
 from PIL import Image
 from transformers import CLIPModel, CLIPProcessor
 import open_clip
+import yaml
+
+def read_config(file="config/config.yaml", section=None):
+    with open(file, "r") as f:
+        config = yaml.safe_load(f)
+    if section is not None:
+        config = config[section]
+    return config
 
 def load_model(model_id: str) -> tuple[CLIPModel, CLIPProcessor]:
     model = CLIPModel.from_pretrained(model_id)

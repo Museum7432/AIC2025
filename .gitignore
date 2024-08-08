@@ -1,8 +1,9 @@
 KeyFrames
-config
 embeddings
 docker-compose
 api/__pycache__
 frontend/__pycache__
 *.pyc
 dataset/
+data/
+.vscode/

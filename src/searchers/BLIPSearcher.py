@@ -28,8 +28,7 @@ class searchForBLIP:
     """
     def __init__(self, model_id: str, pretrain: str , index: faiss.Index=None, db: list=[]) -> None:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-
-        
+        print("searchForBLIP: ", self.device)
         self.model, self.vis_processors, self.txt_processors = load_model_and_preprocess(name= model_id, model_type= pretrain, is_eval=True, device = self.device )
         self.model.eval()
         self.model_name = model_id

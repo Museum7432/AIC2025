@@ -17,6 +17,7 @@ from open_clip import create_model_from_pretrained, get_tokenizer, create_model_
 class TextEmbedding():
     def __init__(self,model_name,pretrain):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        print("TextEmbedding: ", self.device)
         self.model,_, self.preprocess = create_model_from_pretrained(model_name, pretrained=pretrain,device=self.device)
         self.model.eval()
     def __call__(self, text: str,model_name) -> np.ndarray:
@@ -43,7 +44,7 @@ class searchForOpenClip:
     """
     def __init__(self, model_id: str, pretrain: str , index: faiss.Index=None, db: list=[]) -> None:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-
+        print("searchForOpenClip: ", self.device)
         
         self.model,_, self.preprocess = create_model_and_transforms(model_id, pretrained=pretrain,device=self.device)
         self.model.eval()
@@ -179,6 +180,7 @@ class SemanticSearcher:
         self.model, self.processor = load_model(model_id)
         self.index = index
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        print("SemanticSearcher: ", self.device)
         self.database = db
 
 
