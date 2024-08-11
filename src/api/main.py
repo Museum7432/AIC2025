@@ -18,6 +18,7 @@ import numpy as np
 from tqdm import tqdm
 import json
 from fastapi.middleware.cors import CORSMiddleware# mới thêm 28_7_24
+from src.searchers.ObjectCountSearcher import search_obj_count_engine# mới thêm 11/8/2024
 
 #GPTapi
 from openai import OpenAI
@@ -40,7 +41,10 @@ class Query_OCR(BaseModel):
     query: conlist(item_type=str, min_items=1, max_items=5) # type: ignore
     k: int =10
 
-
+class Query_ObjectCount(BaseModel):
+    query: conlist(item_type=str, min_items=1, max_items=5) # type: ignore
+    k: int= 10
+    mode: str ="slow"
 
 # add database into faiss indexing
 def faiss_indexing(db: list, feature_dimension: int) -> faiss.IndexFlatL2:
@@ -77,6 +81,20 @@ def load_databaseOCR(PATH_TO_DB: str) -> Dict[Dict[str,str],]:
             database[vid] = data
         return database
 
+#####Mới thêm 11/8/2024
+def load_databaseObjectCount_Slow(PATH_TO_DB:str)-> Dict[Dict[str,str],]:
+    data_base=[]
+    for name_file_feature in tqdm(sorted(os.listdir(PATH_TO_DB))):
+        vid_name=name_file_feature.split('.')[0]
+        features=np.load(os.path.join(PATH_TO_DB,name_file_feature))
+        for idx,feat in enumerate(features,1):
+            instance=(vid_name,idx,feat)
+            data_base.append(instance)
+    return data_base
+def load_databaseObjectCount_Fast(PATH_TO_DB:str)-> Dict[Dict[str,str],]:
+    pass
+    
+
 app = FastAPI(title="ELO@AIC Image Semantic Search")
 #mới thêm 28_7_24
 app.add_middleware(
@@ -92,6 +110,8 @@ def load_searcher() -> None:
     
     global dbOCR#biến toàn cục phải khai báo trước khi dùng
     dbOCR = load_databaseOCR("./texts_extracted/")
+    global dbObjectCount
+    dbObjectCount = load_databaseObjectCount_Slow("./Object_Counting_vector_np/")
 
     db32 = Database("./embeddings/blip2_feature_extractor-ViTG/")
     db14 = Database("./embeddings/blip2_image_text_matching-coco/")
@@ -161,17 +181,16 @@ def search_OCR(query_batch: Query_OCR)-> SearchResult:
     k=query_batch.k
     results=search_compare_similirity_word_load_fulldatabase_to_ram(query[0],database=dbOCR,num_img=k)
     return  SearchResult(search_result=results)
-
-    return SearchResult(search_result=result)
-#mới thêm OCR
-@app.post("/search_OCR",response_model=SearchResult)
-def search_OCR(query_batch: Query_OCR)-> SearchResult:
+@app.post("/search_ObjectCount", response_model=SearchResult)
+def search_ObjectCount(query_batch: Query_ObjectCount) -> SearchResult:
     query=query_batch.query
     k=query_batch.k
-    results=search_compare_similirity_word_load_fulldatabase_to_ram(query[0],database=dbOCR,num_img=k)
-    return  SearchResult(search_result=results)
-
-
+    mode=query_batch.mode
+    if mode=="slow":
+        results=search_obj_count_engine(query[0],db=dbObjectCount,topk=k,measure_method="l2_norm")
+    elif mode=="fast":
+        pass
+    return SearchResult(search_result=results)
 if __name__ == "__main__":
     import uvicorn
 
