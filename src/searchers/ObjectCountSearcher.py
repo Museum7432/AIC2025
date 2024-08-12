@@ -53,4 +53,24 @@ def search_obj_count_engine_slow(query:str,
 def search_obj_count_engine_fast(query:str,
                   db: list,
                   ):
-   pass
+  # handle query
+  lst=query.split()
+  class_names=['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic_light', 'fire_hydrant', 'stop_sign', 'parking_meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports_ball', 'kite', 'baseball_bat', 'baseball_glove', 'skateboard', 'surfboard', 'tennis_racket', 'bottle', 'wine_glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot_dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted_plant', 'bed', 'dining_table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell_phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy_bear', 'hair_drier', 'toothbrush']
+
+  class_dict = {name: i for i, name in enumerate(class_names)}
+
+  lst_set=[]
+  for num_cls in lst:
+        num,cls=num_cls.split('-')
+        set_img_of_numobj_cls=db[class_dict[cls]][int(num)]
+        lst_set.append(set_img_of_numobj_cls)
+  result = lst_set[0]
+  for s in lst_set[1:]:
+      result = result.intersection(s)
+  search_result = []
+  for vid_img in result:
+     vid,img=vid_img
+     search_result.append({"video_name":vid,
+                          "keyframe_id": img,
+                          "score": 0})
+  return search_result
