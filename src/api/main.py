@@ -18,7 +18,7 @@ import numpy as np
 from tqdm import tqdm
 import json
 from fastapi.middleware.cors import CORSMiddleware# mới thêm 28_7_24
-from src.searchers.ObjectCountSearcher import search_obj_count_engine# mới thêm 11/8/2024
+from src.searchers.ObjectCountSearcher import search_obj_count_engine_slow,search_obj_count_engine_fast# mới thêm 11/8/2024
 
 #GPTapi
 from openai import OpenAI
@@ -81,7 +81,7 @@ def load_databaseOCR(PATH_TO_DB: str) -> Dict[Dict[str,str],]:
             database[vid] = data
         return database
 
-#####Mới thêm 11/8/2024
+#####Mới thêm 11/8/2024 obj count
 def load_databaseObjectCount_Slow(PATH_TO_DB:str)-> Dict[Dict[str,str],]:
     data_base=[]
     for name_file_feature in tqdm(sorted(os.listdir(PATH_TO_DB))):
@@ -92,7 +92,28 @@ def load_databaseObjectCount_Slow(PATH_TO_DB:str)-> Dict[Dict[str,str],]:
             data_base.append(instance)
     return data_base
 def load_databaseObjectCount_Fast(PATH_TO_DB:str)-> Dict[Dict[str,str],]:
-    pass
+    class_names=['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic_light', 'fire_hydrant', 'stop_sign', 'parking_meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports_ball', 'kite', 'baseball_bat', 'baseball_glove', 'skateboard', 'surfboard', 'tennis_racket', 'bottle', 'wine_glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot_dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted_plant', 'bed', 'dining_table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell_phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy_bear', 'hair_drier', 'toothbrush']
+
+    data_base=[]
+    num_obj_per_cls_max=20
+    for idx,class_name in enumerate(class_names):
+        data_base.append([])
+        for i in range(num_obj_per_cls_max):
+            data_base[idx].append(set())
+    
+    for name_file_feature in tqdm(sorted(os.listdir(PATH_TO_DB))):
+        vid_name=name_file_feature.split('.')[0]
+        features_vid=np.load(os.path.join(PATH_TO_DB,name_file_feature))
+        for id_img,feature_img in enumerate(features_vid,1):
+            for id_cls,num_obj_per_cls in enumerate(feature_img):
+                if num_obj_per_cls!=0:
+                    data_base[id_cls][num_obj_per_cls].add((vid_name,id_img))
+
+
+
+
+    return data_base
+
     
 
 app = FastAPI(title="ELO@AIC Image Semantic Search")
@@ -110,8 +131,12 @@ def load_searcher() -> None:
     
     global dbOCR#biến toàn cục phải khai báo trước khi dùng
     dbOCR = load_databaseOCR("./texts_extracted/")
-    global dbObjectCount
-    dbObjectCount = load_databaseObjectCount_Slow("./Object_Counting_vector_np/")
+    global dbObjectCount_slow
+    global dbObjectCount_fast
+
+    dbObjectCount_slow = load_databaseObjectCount_Slow("./Object_Counting_vector_np/")
+    dbObjectCount_fast = load_databaseObjectCount_Fast("./Object_Counting_vector_np/")
+
 
     db32 = Database("./embeddings/blip2_feature_extractor-ViTG/")
     db14 = Database("./embeddings/blip2_image_text_matching-coco/")
@@ -187,9 +212,9 @@ def search_ObjectCount(query_batch: Query_ObjectCount) -> SearchResult:
     k=query_batch.k
     mode=query_batch.mode
     if mode=="slow":
-        results=search_obj_count_engine(query[0],db=dbObjectCount,topk=k,measure_method="l2_norm")
+        results=search_obj_count_engine_slow(query[0],db=dbObjectCount_slow,topk=k,measure_method="l2_norm")
     elif mode=="fast":
-        pass
+        results=search_obj_count_engine_fast(query[0],db=dbObjectCount_fast)
     return SearchResult(search_result=results)
 if __name__ == "__main__":
     import uvicorn
