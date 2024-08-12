@@ -4,7 +4,7 @@ sys.path.append("")
 import io
 import base64
 from typing import List, Tuple, Dict# mới thêm OCR
-from src.searchers.OCRSearcher import search_compare_similirity_word_load_fulldatabase_to_ram
+from src.searchers.OCRSearcher import search_compare_similirity_word_load_fulldatabase_to_ram,search_in_db_v2
 import faiss
 import pandas as pd
 from PIL import Image
@@ -73,12 +73,12 @@ def Database(PATH_TO_CLIPFEATURES: str) -> List[Tuple[str, int, np.ndarray],]:
 
 ####### Mới thêm OCR
 def load_databaseOCR(PATH_TO_DB: str) -> Dict[Dict[str,str],]:
-        database = {}
+        database = []
         for vid in tqdm(os.listdir(PATH_TO_DB)):
             path_to_file = os.path.join(PATH_TO_DB, vid)
             with open(path_to_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-            database[vid] = data
+            database.append((vid, data))
         return database
 
 #####Mới thêm 11/8/2024 obj count
@@ -204,7 +204,8 @@ def search(query_batch: Query) -> SearchResult:
 def search_OCR(query_batch: Query_OCR)-> SearchResult:
     query=query_batch.query
     k=query_batch.k
-    results=search_compare_similirity_word_load_fulldatabase_to_ram(query[0],database=dbOCR,num_img=k)
+    # results=search_compare_similirity_word_load_fulldatabase_to_ram(query[0],database=dbOCR,num_img=k)#simple thread
+    results=search_in_db_v2(query=query[0],database=dbOCR,num_img=k)#multi thread
     return  SearchResult(search_result=results)
 @app.post("/search_ObjectCount", response_model=SearchResult)
 def search_ObjectCount(query_batch: Query_ObjectCount) -> SearchResult:
