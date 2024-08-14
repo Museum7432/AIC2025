@@ -8,7 +8,7 @@ from joblib import Parallel, delayed
 # Hàm kiểm tra từ gần giống query trong câu
 
 
-def find_closest_match(query, sentences, threshold=60):
+def find_closest_match(query, sentences, threshold=55):
     tokens = sentences.split('\n')
     for token in tokens:
         # tìm đúng chính xác query đó k sai 1 kí tự, nếu ko ra thì mới so độ tương đồng lấy gần đúng.
