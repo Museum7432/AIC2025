@@ -45,7 +45,7 @@ def search_in_db_video(vid, data, query):# tìm trong 1 video
         check = find_closest_match(query, sentence)
         if check is not None:
             img_names=get_file_name_img_from_keyframe(vid,check[1]['frames'])
-            result.append({"video_name": vid, "keyframe_id": img_names,"thêm": check[1]['frames'], "score": check[0]})
+            result.append({"video_name": vid, "keyframe_id": img_names, "score": check[0]})
     return result
 
 def ASR_search_engine(query,database,num_img=10):# chạy song song , tìm từng trong từng video. mỗi lần tìm song song trong 14 video
