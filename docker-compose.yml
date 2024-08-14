@@ -1,31 +1,33 @@
 services:
   backend-api:
-    image: aic_be:latest
+    build:
+      context: .
+      dockerfile: src/api/Dockerfile
     ports:
       - 8000:8000
 
     volumes:
       - ./:/app/
-      - /home/toannk/.cache/huggingface:/root/.cache/huggingface
-      - /home/toannk/.cache/torch:/root/.cache/torch
+      # - /home/toannk/.cache/huggingface:/root/.cache/huggingface
+      # - /home/toannk/.cache/torch:/root/.cache/torch
       # - ./api:/app/api
       # - ./embeddings:/app/embeddings
       # - ./texts_extracted:/app/texts_extracted
-      # - ./src:/app/src
+      - ./src:/app/src
     networks:
       - project_network
     entrypoint: >
       conda run --no-capture-output -n semantic uvicorn src.api.main:app --host 0.0.0.0 --port 8000
 
-  frontend:
-    image: aic_be:latest
-    ports:
-      - 8501:8501
-    volumes:
-      - ./:/app/
-    depends_on:
-      - backend-api
-    networks:
-      - project_network
+  # frontend:
+  #   image: aic_be:latest
+  #   ports:
+  #     - 8501:8501
+  #   volumes:
+  #     - ./:/app/
+  #   depends_on:
+  #     - backend-api
+  #   networks:
+  #     - project_network
 networks:
   project_network:

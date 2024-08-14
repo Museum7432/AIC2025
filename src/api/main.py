@@ -10,7 +10,7 @@ import pandas as pd
 from PIL import Image
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, conlist
-from api import SemanticSearcher
+from src.searchers.SemanticSearcher import searchForOpenClip
 from src.searchers.BLIPSearcher import searchForBLIP
 import os
 import glob
