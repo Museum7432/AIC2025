@@ -19,6 +19,7 @@ from tqdm import tqdm
 import json
 from fastapi.middleware.cors import CORSMiddleware# mới thêm 28_7_24
 from src.searchers.ObjectCountSearcher import search_obj_count_engine_slow,search_obj_count_engine_fast# mới thêm 11/8/2024
+from src.searchers.ASRSearcher import ASR_search_engine # 13/8/2024
 
 #GPTapi
 from openai import OpenAI
@@ -45,6 +46,9 @@ class Query_ObjectCount(BaseModel):
     query: conlist(item_type=str, min_items=1, max_items=5) # type: ignore
     k: int= 10
     mode: str ="slow"
+class Query_ASR(BaseModel):
+    query: str
+    k: int=10
 
 # add database into faiss indexing
 def faiss_indexing(db: list, feature_dimension: int) -> faiss.IndexFlatL2:
@@ -114,7 +118,15 @@ def load_databaseObjectCount_Fast(PATH_TO_DB:str)-> Dict[Dict[str,str],]:
 
     return data_base
 
-    
+def load_databaseASR(PATH_TO_DB: str):
+    database=[]
+    for vid in tqdm(sorted(os.listdir(PATH_TO_DB))):
+        video_path = os.path.join(PATH_TO_DB, vid)
+        with open(video_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+    database.append((vid[:-5],data))
+    return database
+
 
 app = FastAPI(title="ELO@AIC Image Semantic Search")
 #mới thêm 28_7_24
@@ -131,12 +143,14 @@ def load_searcher() -> None:
     
     global dbOCR#biến toàn cục phải khai báo trước khi dùng
     dbOCR = load_databaseOCR("./texts_extracted/")
+
     global dbObjectCount_slow
     global dbObjectCount_fast
-
     dbObjectCount_slow = load_databaseObjectCount_Slow("./Object_Counting_vector_np/")
     dbObjectCount_fast = load_databaseObjectCount_Fast("./Object_Counting_vector_np/")
 
+    global dbASR
+    dbASR =  load_databaseASR("./ASR_folder/")
 
     db32 = Database("./embeddings/blip2_feature_extractor-ViTG/")
     db14 = Database("./embeddings/blip2_image_text_matching-coco/")
@@ -217,6 +231,13 @@ def search_ObjectCount(query_batch: Query_ObjectCount) -> SearchResult:
     elif mode=="fast":
         results=search_obj_count_engine_fast(query[0],db=dbObjectCount_fast)
     return SearchResult(search_result=results)
+@app.post("/search_ASR",response_model=SearchResult)
+def search_ASR(query_requets: Query_ASR ) -> SearchResult:
+    query=query_requets.query
+    k=query_requets.k
+    results=ASR_search_engine(query=query,database=dbASR,k=k)
+    return SearchResult(search_result=results)
+
 if __name__ == "__main__":
     import uvicorn
 
