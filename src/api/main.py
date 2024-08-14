@@ -4,7 +4,7 @@ sys.path.append("")
 import io
 import base64
 from typing import List, Tuple, Dict# mới thêm OCR
-from src.searchers.OCRSearcher import search_compare_similirity_word_load_fulldatabase_to_ram
+from src.searchers.OCRSearcher import search_compare_similirity_word_load_fulldatabase_to_ram,search_in_db_v2
 import faiss
 import pandas as pd
 from PIL import Image
@@ -18,6 +18,7 @@ import numpy as np
 from tqdm import tqdm
 import json
 from fastapi.middleware.cors import CORSMiddleware# mới thêm 28_7_24
+from src.searchers.ObjectCountSearcher import search_obj_count_engine_slow,search_obj_count_engine_fast# mới thêm 11/8/2024
 
 #GPTapi
 from openai import OpenAI
@@ -40,7 +41,10 @@ class Query_OCR(BaseModel):
     query: conlist(item_type=str, min_items=1, max_items=5) # type: ignore
     k: int =10
 
-
+class Query_ObjectCount(BaseModel):
+    query: conlist(item_type=str, min_items=1, max_items=5) # type: ignore
+    k: int= 10
+    mode: str ="slow"
 
 # add database into faiss indexing
 def faiss_indexing(db: list, feature_dimension: int) -> faiss.IndexFlatL2:
@@ -69,13 +73,48 @@ def Database(PATH_TO_CLIPFEATURES: str) -> List[Tuple[str, int, np.ndarray],]:
 
 ####### Mới thêm OCR
 def load_databaseOCR(PATH_TO_DB: str) -> Dict[Dict[str,str],]:
-        database = {}
+        database = []
         for vid in tqdm(os.listdir(PATH_TO_DB)):
             path_to_file = os.path.join(PATH_TO_DB, vid)
             with open(path_to_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-            database[vid] = data
+            database.append((vid, data))
         return database
+
+#####Mới thêm 11/8/2024 obj count
+def load_databaseObjectCount_Slow(PATH_TO_DB:str)-> Dict[Dict[str,str],]:
+    data_base=[]
+    for name_file_feature in tqdm(sorted(os.listdir(PATH_TO_DB))):
+        vid_name=name_file_feature.split('.')[0]
+        features=np.load(os.path.join(PATH_TO_DB,name_file_feature))
+        for idx,feat in enumerate(features,1):
+            instance=(vid_name,idx,feat)
+            data_base.append(instance)
+    return data_base
+def load_databaseObjectCount_Fast(PATH_TO_DB:str)-> Dict[Dict[str,str],]:
+    class_names=['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic_light', 'fire_hydrant', 'stop_sign', 'parking_meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports_ball', 'kite', 'baseball_bat', 'baseball_glove', 'skateboard', 'surfboard', 'tennis_racket', 'bottle', 'wine_glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot_dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted_plant', 'bed', 'dining_table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell_phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy_bear', 'hair_drier', 'toothbrush']
+
+    data_base=[]
+    num_obj_per_cls_max=20
+    for idx,class_name in enumerate(class_names):
+        data_base.append([])
+        for i in range(num_obj_per_cls_max):
+            data_base[idx].append(set())
+    
+    for name_file_feature in tqdm(sorted(os.listdir(PATH_TO_DB))):
+        vid_name=name_file_feature.split('.')[0]
+        features_vid=np.load(os.path.join(PATH_TO_DB,name_file_feature))
+        for id_img,feature_img in enumerate(features_vid,1):
+            for id_cls,num_obj_per_cls in enumerate(feature_img):
+                if num_obj_per_cls!=0:
+                    data_base[id_cls][num_obj_per_cls].add((vid_name,id_img))
+
+
+
+
+    return data_base
+
+    
 
 app = FastAPI(title="ELO@AIC Image Semantic Search")
 #mới thêm 28_7_24
@@ -92,6 +131,12 @@ def load_searcher() -> None:
     
     global dbOCR#biến toàn cục phải khai báo trước khi dùng
     dbOCR = load_databaseOCR("./texts_extracted/")
+    global dbObjectCount_slow
+    global dbObjectCount_fast
+
+    dbObjectCount_slow = load_databaseObjectCount_Slow("./Object_Counting_vector_np/")
+    dbObjectCount_fast = load_databaseObjectCount_Fast("./Object_Counting_vector_np/")
+
 
     db32 = Database("./embeddings/blip2_feature_extractor-ViTG/")
     db14 = Database("./embeddings/blip2_image_text_matching-coco/")
@@ -159,19 +204,19 @@ def search(query_batch: Query) -> SearchResult:
 def search_OCR(query_batch: Query_OCR)-> SearchResult:
     query=query_batch.query
     k=query_batch.k
-    results=search_compare_similirity_word_load_fulldatabase_to_ram(query[0],database=dbOCR,num_img=k)
+    # results=search_compare_similirity_word_load_fulldatabase_to_ram(query[0],database=dbOCR,num_img=k)#simple thread
+    results=search_in_db_v2(query=query[0],database=dbOCR,num_img=k)#multi thread
     return  SearchResult(search_result=results)
-
-    return SearchResult(search_result=result)
-#mới thêm OCR
-@app.post("/search_OCR",response_model=SearchResult)
-def search_OCR(query_batch: Query_OCR)-> SearchResult:
+@app.post("/search_ObjectCount", response_model=SearchResult)
+def search_ObjectCount(query_batch: Query_ObjectCount) -> SearchResult:
     query=query_batch.query
     k=query_batch.k
-    results=search_compare_similirity_word_load_fulldatabase_to_ram(query[0],database=dbOCR,num_img=k)
-    return  SearchResult(search_result=results)
-
-
+    mode=query_batch.mode
+    if mode=="slow":
+        results=search_obj_count_engine_slow(query[0],db=dbObjectCount_slow,topk=k,measure_method="l2_norm")
+    elif mode=="fast":
+        results=search_obj_count_engine_fast(query[0],db=dbObjectCount_fast)
+    return SearchResult(search_result=results)
 if __name__ == "__main__":
     import uvicorn
 
