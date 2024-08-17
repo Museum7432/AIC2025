@@ -19,7 +19,7 @@ from tqdm import tqdm
 import json
 from fastapi.middleware.cors import CORSMiddleware# mới thêm 28_7_24
 from src.searchers.ObjectCountSearcher import search_obj_count_engine_slow,search_obj_count_engine_fast# mới thêm 11/8/2024
-from src.searchers.ASRSearcher import ASR_search_engine # 13/8/2024 ASR
+from src.searchers.ASRSearcher import ASR_search_engine_fast, ASR_search_engine_slow # 13/8/2024 ASR
 from src.load_database.load_database import faiss_indexing,Database,load_databaseASR,load_databaseObjectCount_Fast,load_databaseObjectCount_Slow,load_databaseOCR
 
 
@@ -51,6 +51,7 @@ class Query_ObjectCount(BaseModel):
 class Query_ASR(BaseModel):
     query: str
     k: int=10
+    mode: str="fast"
 
 
 app = FastAPI(title="ELO@AIC Image Semantic Search")
@@ -160,9 +161,13 @@ def search_ObjectCount(query_batch: Query_ObjectCount) -> SearchResult:
 def search_ASR(query_requets: Query_ASR ) -> SearchResult:
     query=query_requets.query
     k=query_requets.k
-    results=ASR_search_engine(query=query,database=dbASR,k=k)
+    mode=query_requets.mode
+    if mode=="slow":
+        results=ASR_search_engine_slow(query=query,database=dbASR,num_img=k)
+    elif mode=="fast":
+        results=ASR_search_engine_fast(query=query,database=dbASR,num_img=k)
     return SearchResult(search_result=results)
-
+    
 if __name__ == "__main__":
     import uvicorn
 
