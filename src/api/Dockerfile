@@ -5,8 +5,10 @@ FROM continuumio/miniconda3
 WORKDIR /app
 # Copying the environment.yml file to the image
 COPY ./environment.yml .
+
 # Dealing with CondaHTTPError: HTTP 000 CONNECTION FAILED for url <https://repo.anaconda.com/pkgs/main/linux-64/current_repodata.json>
 RUN conda config --set ssl_verify no
+
 # Building the environment
 # RUN conda env create -f environment.yml
 RUN conda env update -f environment.yml

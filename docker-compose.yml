@@ -11,7 +11,7 @@ services:
       # - /home/toannk/.cache/huggingface:/root/.cache/huggingface
       # - /home/toannk/.cache/torch:/root/.cache/torch
       # - ./api:/app/api
-      # - ./embeddings:/app/embeddings
+      - ./embeddings:/app/embeddings
       # - ./texts_extracted:/app/texts_extracted
       - ./src:/app/src
     networks:
