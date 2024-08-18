@@ -84,17 +84,13 @@ def load_searcher() -> None:
     global dbASR
     dbASR =  load_databaseASR("./embeddings/ASR_folder/")
 
-    db_bl2 = Database("./embeddings/blip2_feature_extractor-ViTG/")
-    db_5b = Database("./embeddings/ViT-H-14-378-quickgelu-dfn5b/")
-    db_1b = Database("./embeddings/ViT-bigG-14-CLIPA-336-datacomp1b/")
+
     db_bl2 = Database("./embeddings/blip2_feature_extractor-ViTG/")
     db_5b = Database("./embeddings/ViT-H-14-378-quickgelu-dfn5b/")
     db_1b = Database("./embeddings/ViT-bigG-14-CLIPA-336-datacomp1b/")
 
     #load features into databases
-    index_bl2 = faiss_indexing(db_bl2, 768)
-    index_5b = faiss_indexing(db_5b, 1024)
-    index_1b = faiss_indexing(db_1b , 1280)
+   
     index_bl2 = faiss_indexing(db_bl2, 768)
     index_5b = faiss_indexing(db_5b, 1024)
     index_1b = faiss_indexing(db_1b , 1280)
