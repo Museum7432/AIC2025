@@ -170,7 +170,7 @@ def search_ASR(query_requets: Query_ASR ) -> SearchResult:
     elif mode=="fast":
         results=ASR_search_engine_fast(query=query,database=dbASR,num_img=k)
     return SearchResult(search_result=results)
-@app.post("/search_IMG",reponse_model=SearchResult)
+@app.post("/search_IMG",response_model=SearchResult)
 def search_IMG(Query_requets: Query_image)-> SearchResult:
     video_name=Query_requets.video_name
     idx_img=Query_requets.idx
@@ -178,15 +178,15 @@ def search_IMG(Query_requets: Query_image)-> SearchResult:
     k=Query_requets.k
     # read embedding tu file numpy ra. chu ko search embedding tu database no lau
     if model == "Blip2-ViTG":
-        arrs_of_vid=np.read("./emdedding/Path_to_folder_npy_of_model/"+video_name+"/.npy")
+        arrs_of_vid=np.load("./emdedding/Path_to_folder_npy_of_model/"+video_name+"/.npy")
         query_arr=arrs_of_vid[idx_img-1]
         results=searcherbl2.Image_search(query_arr,k)
     elif model == "ViT 5b":
-        arrs_of_vid=np.read("./emdedding/Path_to_folder_npy_of_model/"+video_name+"/.npy")
+        arrs_of_vid=np.load("./emdedding/Path_to_folder_npy_of_model/"+video_name+"/.npy")
         query_arr=arrs_of_vid[idx_img-1]
         results = searcher5b(query_arr, k)
     elif model== "ViT-bigG-14":
-        arrs_of_vid=np.read("./emdedding/Path_to_folder_npy_of_model/"+video_name+"/.npy")
+        arrs_of_vid=np.load("./emdedding/Path_to_folder_npy_of_model/"+video_name+"/.npy")
         query_arr=arrs_of_vid[idx_img-1]
         results=searcher1b.Image_search(query_arr,k)
     return SearchResult(search_result=results)
