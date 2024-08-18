@@ -11,6 +11,7 @@ from PIL import Image
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, conlist
 from src.searchers.SemanticSearcher import searchForOpenClip
+from src.searchers.SemanticSearcher import searchForOpenClip
 from src.searchers.BLIPSearcher import searchForBLIP
 import os
 import glob
@@ -19,8 +20,8 @@ from tqdm import tqdm
 import json
 from fastapi.middleware.cors import CORSMiddleware# mới thêm 28_7_24
 from src.searchers.ObjectCountSearcher import search_obj_count_engine_slow,search_obj_count_engine_fast# mới thêm 11/8/2024
-from src.searchers.ASRSearcher import ASR_search_engine # 13/8/2024 ASR
-from src.load_database.load_database import faiss_indexing,Database,load_databaseASR,load_databaseObjectCount_Fast,load_databaseObjectCount_Slow, load_databaseOCR
+from src.searchers.ASRSearcher import ASR_search_engine_fast, ASR_search_engine_slow # 13/8/2024 ASR
+from src.load_database.load_database import faiss_indexing,Database,load_databaseASR,load_databaseObjectCount_Fast,load_databaseObjectCount_Slow,load_databaseOCR
 
 
 #GPTapi
@@ -51,6 +52,12 @@ class Query_ObjectCount(BaseModel):
 class Query_ASR(BaseModel):
     query: str
     k: int=10
+    mode: str="fast"
+class Query_image(BaseModel):
+    video_name: str
+    idx: int
+    model_name:str
+    k: int=10
 
 
 app = FastAPI(title="ELO@AIC Image Semantic Search")
@@ -80,19 +87,25 @@ def load_searcher() -> None:
     db_bl2 = Database("./embeddings/blip2_feature_extractor-ViTG/")
     db_5b = Database("./embeddings/ViT-H-14-378-quickgelu-dfn5b/")
     db_1b = Database("./embeddings/ViT-bigG-14-CLIPA-336-datacomp1b/")
+    db_bl2 = Database("./embeddings/blip2_feature_extractor-ViTG/")
+    db_5b = Database("./embeddings/ViT-H-14-378-quickgelu-dfn5b/")
+    db_1b = Database("./embeddings/ViT-bigG-14-CLIPA-336-datacomp1b/")
 
     #load features into databases
     index_bl2 = faiss_indexing(db_bl2, 768)
     index_5b = faiss_indexing(db_5b, 1024)
     index_1b = faiss_indexing(db_1b , 1280)
+    index_bl2 = faiss_indexing(db_bl2, 768)
+    index_5b = faiss_indexing(db_5b, 1024)
+    index_1b = faiss_indexing(db_1b , 1280)
 
-    global searcher32
-    global searcher14
-    global searcher14336
+    global searcherbl2
+    global searcher5b
+    global searcher1b
 
-    searcher32 = searchForBLIP("blip2_feature_extractor", "pretrain",   index_bl2, db_bl2)
-    searcher14= searchForOpenClip("ViT-H-14-378-quickgelu", "dfn5b", index_5b, db_5b)
-    searcher14336 = searchForOpenClip("ViT-bigG-14-CLIPA-336", "datacomp1b", index_1b, db_1b)
+    searcherbl2 = searchForBLIP("blip2_feature_extractor", "pretrain",   index_bl2, db_bl2)
+    searcher5b= searchForOpenClip("ViT-H-14-378-quickgelu", "dfn5b", index_5b, db_5b)
+    searcher1b = searchForOpenClip("ViT-bigG-14-CLIPA-336", "datacomp1b", index_1b, db_1b)
 
 @app.get("/")
 def home() -> None:
@@ -128,12 +141,12 @@ def search(query_batch: Query) -> SearchResult:
         ]
     elif not isinstance(query[0], str):
         HTTPException(status_code=400, detail="Query must be a list of strings or base64 encoded images")
-    if model == "Blip2-Coco":
-        result = searcher14(query, k)
-    elif model == "Blip2-Coco":
-        result = searcher14(query, k)
-    elif model == "Blip2-ViTG":
-        result = searcher32(query, k)
+    if model == "Blip2-ViTG":
+        result = searcherbl2(query,k)
+    elif model == "ViT 5b":
+        result = searcher5b(query, k)
+    elif model == "ViT-bigG-14":
+        result = searcher1b(query, k)
 
     return SearchResult(search_result=result)
 #mới thêm OCR
@@ -158,8 +171,33 @@ def search_ObjectCount(query_batch: Query_ObjectCount) -> SearchResult:
 def search_ASR(query_requets: Query_ASR ) -> SearchResult:
     query=query_requets.query
     k=query_requets.k
-    results=ASR_search_engine(query=query,database=dbASR, num_img = k)
+    mode=query_requets.mode
+    if mode=="slow":
+        results=ASR_search_engine_slow(query=query,database=dbASR,num_img=k)
+    elif mode=="fast":
+        results=ASR_search_engine_fast(query=query,database=dbASR,num_img=k)
     return SearchResult(search_result=results)
+@app.post("/search_IMG",reponse_model=SearchResult)
+def search_IMG(Query_requets: Query_image)-> SearchResult:
+    video_name=Query_requets.video_name
+    idx_img=Query_requets.idx
+    model=Query_requets.model_name
+    k=Query_requets.k
+    # read embedding tu file numpy ra. chu ko search embedding tu database no lau
+    if model == "Blip2-ViTG":
+        arrs_of_vid=np.read("./emdedding/Path_to_folder_npy_of_model/"+video_name+"/.npy")
+        query_arr=arrs_of_vid[idx_img-1]
+        results=searcherbl2.Image_search(query_arr,k)
+    elif model == "ViT 5b":
+        arrs_of_vid=np.read("./emdedding/Path_to_folder_npy_of_model/"+video_name+"/.npy")
+        query_arr=arrs_of_vid[idx_img-1]
+        results = searcher5b(query_arr, k)
+    elif model== "ViT-bigG-14":
+        arrs_of_vid=np.read("./emdedding/Path_to_folder_npy_of_model/"+video_name+"/.npy")
+        query_arr=arrs_of_vid[idx_img-1]
+        results=searcher1b.Image_search(query_arr,k)
+    return SearchResult(search_result=results)
+    
 
 if __name__ == "__main__":
     import uvicorn
