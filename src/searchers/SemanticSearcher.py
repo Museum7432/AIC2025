@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Union
+from typing import Union, List, Dict
 
 import torch
 import faiss
@@ -143,7 +143,27 @@ class searchForOpenClip:
                                   "keyframe_id": idx,
                                   "score": distance})
         return search_result
-    
+    def Image_search(self, embdedding_image,k:int=5) -> List[Dict[str,int,int]]:
+        measure = self.index.search(embdedding_image, k)
+        #tuple of two arrays distance , index
+
+        measure  = np.reshape(np.array(measure), newshape=(2, k)).T
+        # sort the result
+        sorted_indices = np.argsort(measure[:, 0])
+        measure  = measure[sorted_indices]
+
+        '''Trả về top K kết quả'''
+        search_result = []
+        for instance in measure:
+            distance, ins_id = instance
+            ins_id = int(ins_id)
+            video_name, idx = self.database[ins_id][0], self.database[ins_id][1]
+
+            search_result.append({"video_name": video_name,
+                                  "keyframe_id": idx,
+                                  "score": distance})
+        return search_result
+
     @staticmethod
     def _infer_type(x: list[Union[Image.Image, str]]) -> str:
         """Infers the type of the input batch
