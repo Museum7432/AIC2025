@@ -22,11 +22,15 @@ from fastapi.middleware.cors import CORSMiddleware# mới thêm 28_7_24
 from src.searchers.ObjectCountSearcher import search_obj_count_engine_slow,search_obj_count_engine_fast# mới thêm 11/8/2024
 from src.searchers.ASRSearcher import ASR_search_engine_fast, ASR_search_engine_slow # 13/8/2024 ASR
 from src.load_database.load_database import faiss_indexing,Database,load_databaseASR,load_databaseObjectCount_Fast,load_databaseObjectCount_Slow,load_databaseOCR
+import yaml
 
+
+with open('./config/config.yaml', 'r') as file:
+    config = yaml.safe_load(file)
 
 #GPTapi
 from openai import OpenAI
-api_key = ""
+api_key = config['GPT_KEY']['GPT4_KEY']
 client = OpenAI(api_key = api_key)
 
 # from  api.SemanticSearcher import searchForOpenClip
@@ -112,7 +116,7 @@ def home() -> None:
 def search(query_batch: Query) -> SearchResult:
     query = query_batch.query
     #translate Vi2En GPTapi
-    if query_batch.language == "Vietnamese":
+    if query_batch.language == "Vie":
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
@@ -123,6 +127,7 @@ def search(query_batch: Query) -> SearchResult:
             ]
         )
         query=[response.choices[0].message.content]
+        print("Gpt-4 output", query)
 
     k = query_batch.k
     model = query_batch.model
@@ -162,7 +167,8 @@ def search_ObjectCount(query_batch: Query_ObjectCount) -> SearchResult:
         results=search_obj_count_engine_slow(query[0],db=dbObjectCount_slow,topk=k,measure_method="l2_norm")
     elif mode=="fast":
         results=search_obj_count_engine_fast(query[0],db=dbObjectCount_fast)
-    return SearchResult(search_result=results)
+ 
+    return  SearchResult(search_result=results)
 @app.post("/search_ASR",response_model=SearchResult)
 def search_ASR(query_requets: Query_ASR ) -> SearchResult:
     query=query_requets.query
@@ -173,7 +179,7 @@ def search_ASR(query_requets: Query_ASR ) -> SearchResult:
     elif mode=="fast":
         results=ASR_search_engine_fast(query=query,database=dbASR,num_img=k)
     return SearchResult(search_result=results)
-@app.post("/search_IMG",reponse_model=SearchResult)
+@app.post("/search_IMG",response_model=SearchResult)
 def search_IMG(Query_requets: Query_image)-> SearchResult:
     video_name=Query_requets.video_name
     idx_img=Query_requets.idx
@@ -181,15 +187,15 @@ def search_IMG(Query_requets: Query_image)-> SearchResult:
     k=Query_requets.k
     # read embedding tu file numpy ra. chu ko search embedding tu database no lau
     if model == "Blip2-ViTG":
-        arrs_of_vid=np.read("./emdedding/Path_to_folder_npy_of_model/"+video_name+"/.npy")
+        arrs_of_vid=np.load("./embeddings/blip2_feature_extractor-ViTG/"+video_name+".npy")
         query_arr=arrs_of_vid[idx_img-1]
         results=searcherbl2.Image_search(query_arr,k)
     elif model == "ViT 5b":
-        arrs_of_vid=np.read("./emdedding/Path_to_folder_npy_of_model/"+video_name+"/.npy")
+        arrs_of_vid=np.load("./embeddings/ViT-H-14-378-quickgelu-dfn5b/"+video_name+".npy")
         query_arr=arrs_of_vid[idx_img-1]
-        results = searcher5b(query_arr, k)
+        results = searcher5b.Image_search(query_arr, k)
     elif model== "ViT-bigG-14":
-        arrs_of_vid=np.read("./emdedding/Path_to_folder_npy_of_model/"+video_name+"/.npy")
+        arrs_of_vid=np.load("./embeddings/ViT-bigG-14-CLIPA-336-datacomp1b/"+video_name+".npy")
         query_arr=arrs_of_vid[idx_img-1]
         results=searcher1b.Image_search(query_arr,k)
     return SearchResult(search_result=results)

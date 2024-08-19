@@ -144,7 +144,7 @@ class searchForOpenClip:
                                   "score": distance})
         return search_result
     def Image_search(self, embdedding_image,k:int=5) -> List[Dict[str,int,int]]:
-        measure = self.index.search(embdedding_image, k)
+        measure = self.index.search(np.expand_dims(embdedding_image,axis =  0) , k)
         #tuple of two arrays distance , index
 
         measure  = np.reshape(np.array(measure), newshape=(2, k)).T

@@ -257,4 +257,5 @@ dependencies:
     - open_clip_torch
     - salesforce-lavis
     - nltk
+    - pyyaml
 prefix: /home/eduardo/anaconda3/envs/semantic
