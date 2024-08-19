@@ -1,4 +1,5 @@
 KeyFrames
+config/*
 embeddings
 docker-compose
 api/__pycache__
