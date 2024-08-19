@@ -33,6 +33,7 @@ class EmbeddingsDB:
         # concatenate all videos' embeddings into a single array for 
         # faster access time
         # shape: (total_num_of_frames, embs_dim)
+        # is a torch tensor
         self.fused_embs = None
 
         # map the fused array index into the videos_name index (1d np.array of int)
@@ -94,13 +95,16 @@ class EmbeddingsDB:
         self.vid_idx2idx = get_start_end_indices(frames_embs)
         self.idx2vid_idx = get_flatten_index_mapping(frames_embs)
 
+        # convert to tensor
+        self.fused_embs = torch.from_numpy(self.fused_embs)
+
     def _load_faiss(self):
         assert self.fused_embs is not None
         # TODO: IndexFlatL2 is a brute-force indexer (.i.e: is no different than linear search)
         # we might want to use cosine similarity instead of L2
         # faiss operation should be in the searcher class
         self.faiss_index = IndexFlatL2(self.embs_dim)
-        self.faiss_index.add(self.fused_embs)
+        self.faiss_index.add(self.fused_embs.numpy())
     
     def get_info(self, fused_frame_idx):
         # return video name, frame id

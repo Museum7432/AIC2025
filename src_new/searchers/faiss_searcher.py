@@ -49,14 +49,14 @@ class FaissSearcher:
 
         return search_result
 
-    def search_by_texts(self, texts, topk=5):
+    def batch_search_by_text(self, texts, topk=5):
         # batch search by text
         v_queries = self.encoder.encode_texts(texts, normalization=True)
 
         return self.batch_vector_search(v_queries, topk=topk)
 
 
-    def search_by_images(self, images, topk=5):
+    def batch_search_by_image(self, images, topk=5):
         # batch search by images
         # images should be a list of PIL.Image
         
