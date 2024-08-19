@@ -48,12 +48,13 @@ def search_in_db_video_fast(vid, data, query):# tìm trong 1 video
         if check is not None:
             # img_names=get_file_name_img_from_keyframe(vid,check[1]['frames'])
             # result.append({"video_name": vid, "keyframe_id": img_names, "score": check[0]})
-            result.append({"video_name": vid, "keyframe_id": check[1]['frames'], "score": check[0]})
+            result.append({"video_name": vid, "keyframe_id": check[1]['frames'], "score": check[0],"text":check[1]['text']})
 
     return result
 
 def ASR_search_engine_fast(query,database,num_img=10):# chạy song song , tìm từng trong từng video. mỗi lần tìm song song trong 14 video
     n_jobs=20
+    query=query.strip()
     results = Parallel(n_jobs=n_jobs)(
         delayed(search_in_db_video_fast)(vid, data, query) for vid, data in database
     )
@@ -78,12 +79,13 @@ def search_in_db_video_slow(vid, data, query):# tìm trong 1 video
     for idx,sentence in enumerate(data):#duyệt qua từng câu nói trong video
         check = find_closest_match_slow(query, sentence)
         if check is not None:
-            result.append({"video_name": vid, "keyframe_id": check[1]['frames'], "score": check[0]})
+            result.append({"video_name": vid, "keyframe_id": check[1]['frames'], "score": check[0],"text":check[1]['text']})
 
     return result
 
 def ASR_search_engine_slow(query,database,num_img=10):# chạy song song , tìm từng trong từng video. mỗi lần tìm song song trong 14 video
     n_jobs=20
+    query=query.strip()
     results = Parallel(n_jobs=n_jobs)(
         delayed(search_in_db_video_slow)(vid, data, query) for vid, data in database
     )
