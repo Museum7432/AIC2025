@@ -24,7 +24,7 @@ def get_flatten_index_mapping(arr):
 
     return np.repeat(row_indices, arr_lens)
 
-class EmbeddingsDB():
+class EmbeddingsDB:
     def __init__(self, embs_base_path, build_faiss_index=False):
         self.embs_base_path = embs_base_path
         self.build_faiss_index = build_faiss_index
@@ -101,6 +101,19 @@ class EmbeddingsDB():
         # faiss operation should be in the searcher class
         self.faiss_index = IndexFlatL2(self.embs_dim)
         self.faiss_index.add(self.fused_embs)
+    
+    def get_info(self, fused_frame_idx):
+        # return video name, frame id
+        vid_idx = self._get_vid_id(fused_frame_idx)
+
+        vid_name = self.videos_name[vid_idx]
+
+        _start, _end = self._get_vid_start_end(vid_idx)
+
+        assert fused_frame_idx >= _end
+        frame_idx = fused_frame_idx - _start
+
+        return vid_name, frame_idx
 
     
     def _get_vid_id(self, fused_frame_idx):
