@@ -2,11 +2,11 @@ import torch
 import numpy as np
 from PIL import Image
 
-import open_clip
+from lavis.models import load_model_and_preprocess
 
 
-class ClipEncoder:
-    def __init__(self, model_arch, pretrained, device=None, jit=True):
+class BlipEncoder:
+    def __init__(self, model_id, pretrain, device=None):
 
         if device is None:
             self.device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -14,23 +14,22 @@ class ClipEncoder:
             self.device = device
 
         # load model
-        model, _, preprocess = open_clip.create_model_and_transforms(
-            model_arch, pretrained=pretrained, device=self.device, jit=jit
+        model, vis_processors, txt_processors = load_model_and_preprocess(
+            name=model_id, model_type=pretrain, is_eval=True, device=self.device
         )
+
         model.eval()
         for param in model.parameters():
             param.requires_grad = False
 
         self.model = model
 
-        self.img_preprocess = preprocess
+        self.img_preprocess = vis_processors["eval"]
 
-        self.text_tokenizer = open_clip.get_tokenizer(model_arch)
+        self.text_preprocess = txt_processors["eval"]
 
-    def _tokenize_texts(self, texts):
-        # open clip has a token limit of 77
-        # (#sents, 77)
-        return self.text_tokenizer(texts)
+    def _preprocess_texts(self, texts):
+        return [self.text_preprocess(t) for t in texts]
 
     def _preprocess_images(self, images):
         # images should be a list of PIL.Image
@@ -44,9 +43,13 @@ class ClipEncoder:
 
         batch = batch.to(self.device)
 
+        sample = {"image": batch}
+
         with torch.no_grad():
 
-            image_features = self.model.encode_image(batch)
+            image_features = self.model.extract_features(
+                sample, mode="image"
+            ).image_embeds[:, 0, :]
 
             if normalization:
                 image_features /= image_features.norm(dim=-1, keepdim=True)
@@ -54,13 +57,15 @@ class ClipEncoder:
         return image_features.cpu().numpy()
 
     def encode_texts(self, texts, normalization=True):
-        batch = self._tokenize_texts(texts)
+        texts = self._preprocess_texts(texts)
 
-        batch = batch.to(self.device)
+        sample = {"text_input": texts}
 
         with torch.no_grad():
 
-            text_features = self.model.encode_text(batch)
+            text_features = self.model.extract_features(
+                sample, mode="text"
+            ).text_embeds[:, 0, :]
             if normalization:
                 text_features /= text_features.norm(dim=-1, keepdim=True)
 

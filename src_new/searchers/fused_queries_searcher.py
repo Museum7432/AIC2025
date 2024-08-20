@@ -86,13 +86,13 @@ class FusedSearcher:
         # batch search by text
         v_queries = self.encoder.encode_texts(texts, normalization=True)
 
-        return self.batch_vector_search(v_queries, topk=topk)
+        return self.vectors_search(v_queries, topk=topk)
 
     def search_by_texts(self, images, topk=5):
         # batch search by text
         v_queries = self.encoder.encode_images(images, normalization=True)
 
-        return self.batch_vector_search(v_queries, topk=topk)
+        return self.vectors_search(v_queries, topk=topk)
     
     
     
