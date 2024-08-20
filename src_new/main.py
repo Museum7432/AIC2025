@@ -8,11 +8,12 @@ from pydantic import BaseModel, conlist
 
 # load searchers on startup
 from searchers import SearchersLifespan
+from routes import asr_route, ocr_route, search_route, obj_c_route
 
 from .config import settings
 
-
 app = FastAPI(title=settings.app_name, lifespan=SearchersLifespan)
+
 
 # mới thêm 28_7_24
 app.add_middleware(
@@ -24,3 +25,20 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.get("/")
+def home() -> None:
+    return "Welcome to the Image Semantic Search API. Head over http://localhost:8000/docs for more info."
+
+
+app.include_router(asr_route)
+app.include_router(ocr_route)
+app.include_router(search_route)
+app.include_router(obj_c_route)
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)

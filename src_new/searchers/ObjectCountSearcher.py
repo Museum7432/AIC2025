@@ -92,7 +92,7 @@ class ObjectCountSearcher:
   def __init__(self, obj_db):
     self.db = obj_db
   
-  def search_fast(self, query, topk=5, measure_method="l2_norm"):
+  def search_fast(self, query):
     return search_obj_count_engine_fast(query, self.db.fast_db)
   
   def search_slow(self, query, topk=5, measure_method="l2_norm"):

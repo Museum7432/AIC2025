@@ -6,6 +6,7 @@ import json
 from typing import List, Tuple, Dict
 import os
 
+
 def get_start_end_indices(arr):
     # arr: array of arrays
     arr_lens = [len(a) for a in arr]
@@ -16,6 +17,7 @@ def get_start_end_indices(arr):
 
     return np.vstack([start_indices, end_indices]).T
 
+
 def get_flatten_index_mapping(arr):
     # arr: array of arrays
     arr_lens = [len(a) for a in arr]
@@ -24,13 +26,14 @@ def get_flatten_index_mapping(arr):
 
     return np.repeat(row_indices, arr_lens)
 
+
 class EmbeddingsDB:
     def __init__(self, embs_base_path, build_faiss_index=False):
         self.embs_base_path = embs_base_path
         self.build_faiss_index = build_faiss_index
         self.embs_dim = None
 
-        # concatenate all videos' embeddings into a single array for 
+        # concatenate all videos' embeddings into a single array for
         # faster access time
         # shape: (total_num_of_frames, embs_dim)
         # is a torch tensor
@@ -47,20 +50,17 @@ class EmbeddingsDB:
         # (#videos, 2)
         self.vid_idx2idx = None
 
-
         # TODO: perform normalization and convert embs to tensor
         self._load_embs()
 
         # embs_dim, vid_idx2idx,... should be set by _load_embs
         assert len(self.videos_name) == len(self.vid_idx2idx)
 
-
         self.faiss_index = None
 
         if build_faiss_index:
             self._load_faiss()
 
-    
     def _load_embs(self):
 
         assert len(self.videos_name) == 0
@@ -73,7 +73,7 @@ class EmbeddingsDB:
 
             if not embs_path.endswith(".npy"):
                 raise ValueError(f"unrecognized embedding file extension {embs_path}")
-            
+
             # load frame embeddings
             video_embs = np.load(embs_path)
             video_embs = np.float32(video_embs)
@@ -81,16 +81,18 @@ class EmbeddingsDB:
             frames_embs.append(video_embs)
 
             # save video name
-            video_name = embs_file.split('.')[0]
+            video_name = embs_file.split(".")[0]
             self.videos_name.append(video_name)
 
             if self.embs_dim is None:
                 self.embs_dim = video_embs.shape[-1]
             else:
-                assert self.embs_dim == video_embs.shape[-1], f"mismatch embedding dimension in {embs_path}"
+                assert (
+                    self.embs_dim == video_embs.shape[-1]
+                ), f"mismatch embedding dimension in {embs_path}"
 
         self.fused_embs = np.vstack(frames_embs)
-        
+
         self.vid_idx2idx = get_start_end_indices(frames_embs)
         self.idx2vid_idx = get_flatten_index_mapping(frames_embs)
 
@@ -104,7 +106,7 @@ class EmbeddingsDB:
         # faiss operation should be in the searcher class
         self.faiss_index = faiss.IndexFlatL2(self.embs_dim)
         self.faiss_index.add(self.fused_embs.numpy())
-    
+
     def get_info(self, fused_frame_idx):
         # return video name, frame id
         vid_idx = self._get_vid_id(fused_frame_idx)
@@ -118,7 +120,6 @@ class EmbeddingsDB:
 
         return vid_name, frame_idx
 
-    
     def _get_vid_id(self, fused_frame_idx):
         # faiss index to video id
         return self.idx2vid_idx[fused_frame_idx]
@@ -127,7 +128,7 @@ class EmbeddingsDB:
         # faiss index to video name
         vid_idx = self._get_vid_id(fused_frame_idx)
         return self.videos_name[vid_idx]
-    
+
     def _get_vid_start_end(self, vid_id):
         # video id to start and end faiss index
         return self.vid_idx2idx[vid_id]
@@ -139,22 +140,19 @@ class EmbeddingsDB:
 
     def get_vid_embs(self, vid_id):
         _start, _end = self._get_vid_start_end(vid_id)
-        return self.fused_embs[_start:_end]
-    
+        return self.fused_embs[_start:_end].numpy()
+
+    def _to_fused_index(self, vid_name, frame_idx):
+
+        _start, _end = self.get_vid_start_end_by_name(vid_name)
+
+        return _start + frame_idx
+
+    def get_frame_embs(self, vid_name, frame_idx):
+        fused_frame_idx = self._to_fused_index(vid_name, frame_idx)
+
+        return self.fused_embs[fused_frame_idx].numpy()
+
     def get_vid_embs_by_name(self, vid_name):
         vid_id = self.videos_name.index(vid_name)
         return self.get_vid_embs(vid_id)
-    
-
-
-
-
-
-
-
-
-
-
-
-
-        
