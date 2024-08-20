@@ -76,4 +76,4 @@ class OcrSearcher:
         self.ocr_db = ocr_db
 
     def search_in_db(self, query, num_img=10):
-        return search_in_db_v2(query, self.ocr_db, num_img=10)
+        return search_in_db_v2(query, self.ocr_db.db, num_img=10)

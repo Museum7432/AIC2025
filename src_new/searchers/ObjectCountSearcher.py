@@ -52,10 +52,23 @@ def search_obj_count_engine_slow(query:str,
   return search_result
 def search_obj_count_engine_fast(query:str,
                   db: list,
+
                   ):
   # handle query
   lst=query.split()
-  class_names=['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic_light', 'fire_hydrant', 'stop_sign', 'parking_meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports_ball', 'kite', 'baseball_bat', 'baseball_glove', 'skateboard', 'surfboard', 'tennis_racket', 'bottle', 'wine_glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot_dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted_plant', 'bed', 'dining_table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell_phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy_bear', 'hair_drier', 'toothbrush']
+
+  # fmt: off
+  class_names=[
+    'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck',
+    'boat','traffic_light', 'fire_hydrant', 'stop_sign', 'parking_meter', 'bench',
+    'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe',
+    'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard',
+    'sports_ball', 'kite', 'baseball_bat', 'baseball_glove', 'skateboard', 'surfboard', 'tennis_racket',
+    'bottle', 'wine_glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange',
+    'broccoli', 'carrot', 'hot_dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted_plant', 'bed', 'dining_table',
+    'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell_phone', 'microwave', 'oven', 'toaster', 'sink',
+    'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy_bear', 'hair_drier', 'toothbrush']
+  # fmt: on
 
   class_dict = {name: i for i, name in enumerate(class_names)}
 
@@ -74,3 +87,13 @@ def search_obj_count_engine_fast(query:str,
                           "keyframe_id": img,
                           "score": 0})
   return search_result
+
+class ObjectCountSearcher:
+  def __init__(self, obj_db):
+    self.db = obj_db
+  
+  def search_fast(self, query, topk=5, measure_method="l2_norm"):
+    return search_obj_count_engine_fast(query, self.db.fast_db)
+  
+  def search_slow(self, query, topk=5, measure_method="l2_norm"):
+    return search_obj_count_engine_slow(query, self.db.slow_db, topk=topk, measure_method=measure_method)

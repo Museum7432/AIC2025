@@ -4,7 +4,7 @@ import faiss
 from tqdm import tqdm
 import json
 from typing import List, Tuple, Dict
-
+import os
 
 def get_start_end_indices(arr):
     # arr: array of arrays
@@ -68,7 +68,7 @@ class EmbeddingsDB:
         frames_embs = []
         start_index = 0
 
-        for embs_file in tqdm(sorted(os.listdir(self.embs_base_path))):
+        for embs_file in sorted(os.listdir(self.embs_base_path)):
             embs_path = os.path.join(self.embs_base_path, embs_file)
 
             if not embs_path.endswith(".npy"):
@@ -84,11 +84,10 @@ class EmbeddingsDB:
             video_name = embs_file.split('.')[0]
             self.videos_name.append(video_name)
 
-
             if self.embs_dim is None:
-                self.embs_dim = video_embs.size(-1)
+                self.embs_dim = video_embs.shape[-1]
             else:
-                assert self.embs_dim == video_embs.size(-1), f"mismatch embedding dimension in {embs_path}"
+                assert self.embs_dim == video_embs.shape[-1], f"mismatch embedding dimension in {embs_path}"
 
         self.fused_embs = np.vstack(frames_embs)
         
@@ -103,7 +102,7 @@ class EmbeddingsDB:
         # TODO: IndexFlatL2 is a brute-force indexer (.i.e: is no different than linear search)
         # we might want to use cosine similarity instead of L2
         # faiss operation should be in the searcher class
-        self.faiss_index = IndexFlatL2(self.embs_dim)
+        self.faiss_index = faiss.IndexFlatL2(self.embs_dim)
         self.faiss_index.add(self.fused_embs.numpy())
     
     def get_info(self, fused_frame_idx):
@@ -114,7 +113,7 @@ class EmbeddingsDB:
 
         _start, _end = self._get_vid_start_end(vid_idx)
 
-        assert fused_frame_idx >= _end
+        assert fused_frame_idx <= _end
         frame_idx = fused_frame_idx - _start
 
         return vid_name, frame_idx

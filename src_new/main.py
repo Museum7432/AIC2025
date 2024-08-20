@@ -6,18 +6,19 @@ from fastapi import FastAPI, HTTPException
 
 from pydantic import BaseModel, conlist
 
-from encoders import ClipEncoder
-from searchers import AsrSearcher, FaissSearcher, FusedSearcher
-from database import EmbeddingsDB, ObjectCountDB
+from searchers import SearchersLifespan
 
 
 
-Vit_H_db = EmbeddingsDB("./embeddings/ViT-H-14-378-quickgelu-dfn5b", build_faiss_index=True)
 
-Vit_H_enc = ClipEncoder(model_arch="ViT-B-32", pretrained="openai")
+app = FastAPI(title="ELO@AIC Image Semantic Search", lifespan=SearchersLifespan)
 
-Vit_H_faiss_searcher = FaissSearcher(Vit_H_db, Vit_H_enc)
-Vit_H_fused_searcher = FusedSearcher(Vit_H_db, Vit_H_enc)
+#mới thêm 28_7_24
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Cho phép tất cả các nguồn gốc. Bạn có thể giới hạn lại theo nhu cầu
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-
-print(Vit_H_faiss_searcher.batch_search_by_text(["a picture of a dog"]))

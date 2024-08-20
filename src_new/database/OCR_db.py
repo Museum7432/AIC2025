@@ -11,7 +11,7 @@ class OcrDB:
     def __init__(self, OCR_base_path="./texts_extracted"):
 
         database = []
-        for vid in tqdm(os.listdir(OCR_base_path)):
+        for vid in os.listdir(OCR_base_path):
             path_to_file = os.path.join(OCR_base_path, vid)
 
             with open(path_to_file, 'r', encoding='utf-8') as f:

@@ -15,7 +15,7 @@ class ObjectCountDB:
 
     def load_slow_db(self, base_path):
         data_base = []
-        for name_file_feature in tqdm(sorted(os.listdir(base_path))):
+        for name_file_feature in sorted(os.listdir(base_path)):
             vid_name = name_file_feature.split(".")[0]
             features = np.load(os.path.join(base_path, name_file_feature))
             for idx, feat in enumerate(features, 1):
@@ -48,7 +48,7 @@ class ObjectCountDB:
             for i in range(num_obj_per_cls_max):
                 data_base[idx].append(set())
 
-        for name_file_feature in tqdm(sorted(os.listdir(base_path))):
+        for name_file_feature in sorted(os.listdir(base_path)):
             vid_name = name_file_feature.split(".")[0]
             features_vid = np.load(os.path.join(base_path, name_file_feature))
             for id_img, feature_img in enumerate(features_vid, 1):

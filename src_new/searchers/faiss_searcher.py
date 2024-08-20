@@ -30,14 +30,14 @@ class FaissSearcher:
         batch_results = []
         for query_results, distances in zip(I, D):
             # for earch query
-            query_results = []
+            q_re = []
 
             # topk results of each query
             for re, distance in zip(query_results, distances):
 
                 vid_name, frame_idx = self.db.get_info(re)
 
-                query_results.append(
+                q_re.append(
                     {
                         "score": distance,
                         "keyframe_id": frame_idx,
@@ -45,9 +45,9 @@ class FaissSearcher:
                     }
                 )
 
-            batch_results.append(query_results)
+            batch_results.append(q_re)
 
-        return search_result
+        return batch_results
 
     def batch_search_by_text(self, texts, topk=5):
         # batch search by text
