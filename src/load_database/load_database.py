@@ -35,17 +35,17 @@ def Database(PATH_TO_CLIPFEATURES: str) -> List[Tuple[str, int, np.ndarray],]:
     return data_base
 
 ####### Mới thêm OCR
-def load_databaseOCR(PATH_TO_DB: str) -> Dict[Dict[str,str],]:
-        database = []
-        for vid in tqdm(os.listdir(PATH_TO_DB)):
-            path_to_file = os.path.join(PATH_TO_DB, vid)
-            with open(path_to_file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            database.append((vid, data))
-        return database
+def load_databaseOCR(PATH_TO_DB: str) -> Dict[str, Dict[str,str],] :
+    database = []
+    for vid in tqdm(os.listdir(PATH_TO_DB)):
+        path_to_file = os.path.join(PATH_TO_DB, vid)
+        with open(path_to_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        database.append((vid, data))
+    return database
 
 #####Mới thêm 11/8/2024 obj count
-def load_databaseObjectCount_Slow(PATH_TO_DB:str)-> Dict[Dict[str,str],]:
+def load_databaseObjectCount_Slow(PATH_TO_DB:str) -> List[Tuple[str, int, np.ndarray],] :
     data_base=[]
     for name_file_feature in tqdm(sorted(os.listdir(PATH_TO_DB))):
         vid_name=name_file_feature.split('.')[0]
@@ -54,7 +54,7 @@ def load_databaseObjectCount_Slow(PATH_TO_DB:str)-> Dict[Dict[str,str],]:
             instance=(vid_name,idx,feat)
             data_base.append(instance)
     return data_base
-def load_databaseObjectCount_Fast(PATH_TO_DB:str)-> Dict[Dict[str,str],]:
+def load_databaseObjectCount_Fast(PATH_TO_DB:str) -> List[Tuple[str, int, np.ndarray],]:
     class_names=['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic_light', 'fire_hydrant', 'stop_sign', 'parking_meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports_ball', 'kite', 'baseball_bat', 'baseball_glove', 'skateboard', 'surfboard', 'tennis_racket', 'bottle', 'wine_glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot_dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted_plant', 'bed', 'dining_table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell_phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy_bear', 'hair_drier', 'toothbrush']
 
     data_base=[]
