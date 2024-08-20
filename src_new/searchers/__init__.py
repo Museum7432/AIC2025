@@ -14,6 +14,7 @@ Searchers = {}
 
 
 def load_seacher():
+
     # load the embeddings
     B32_clip_db = EmbeddingsDB("data/clip-features-vit-b32", build_faiss_index=True)
 
@@ -25,12 +26,13 @@ def load_seacher():
 
     return {"B32_searcher": B32_searcher}
 
-
+# will be loaded on app startup
 @asynccontextmanager
 async def SearchersLifespan(app: FastAPI):
     Searchers.update(load_seacher())
 
     yield
 
+    # on app shutdown
     Searchers.clear()
 

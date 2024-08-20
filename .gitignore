@@ -6,5 +6,6 @@ api/__pycache__
 frontend/__pycache__
 *.pyc
 dataset/
-data/
+data
 .vscode/
+.env
