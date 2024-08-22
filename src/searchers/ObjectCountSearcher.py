@@ -1,5 +1,7 @@
 import math
 import numpy as np
+from database import ObjectCountDB
+
 def search_obj_count_engine_slow(query:str,
                   db: list,
                   topk:int=10,
@@ -89,7 +91,7 @@ def search_obj_count_engine_fast(query:str,
   return search_result
 
 class ObjectCountSearcher:
-  def __init__(self, obj_db):
+  def __init__(self, obj_db: ObjectCountDB):
     self.db = obj_db
   
   def search_fast(self, query):

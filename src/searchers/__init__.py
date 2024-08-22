@@ -6,6 +6,7 @@ from .fused_queries_searcher import FusedSearcher
 from .ASR_searcher import AsrSearcher
 from .ObjectCountSearcher import ObjectCountSearcher
 from .OCR_searcher import OcrSearcher
+from .unified_searcher import UnifiedSearcher
 
 from database import *
 from encoders import ClipEncoder, BlipEncoder

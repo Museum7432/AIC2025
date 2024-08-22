@@ -7,9 +7,12 @@ import numpy as np
 
 from PIL import Image
 
+from database import EmbeddingsDB
+from encoders import ClipEncoder, BlipEncoder
+
 
 class FaissSearcher:
-    def __init__(self, embs_db, encoder):
+    def __init__(self, embs_db: EmbeddingsDB, encoder: Union[ClipEncoder, BlipEncoder]):
         self.db = embs_db
         self.encoder = encoder
 
@@ -55,17 +58,14 @@ class FaissSearcher:
 
         return self.batch_vector_search(v_queries, topk=topk)
 
-
     def batch_search_by_image(self, images, topk=5):
         # batch search by images
         # images should be a list of PIL.Image
-        
+
         v_queries = self.encoder.encode_images(images, normalization=True)
 
         return self.batch_vector_search(v_queries, topk=topk)
-    
+
     def search_by_indexed_image(self, video_name, frame_idx, topk=5):
         image_embs = self.db.get_frame_embs(video_name, frame_idx)
         return self.batch_vector_search(image_embs[None, :], topk=topk)[0]
-
-    

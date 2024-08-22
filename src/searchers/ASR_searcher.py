@@ -3,6 +3,8 @@ import time
 from joblib import Parallel, delayed
 import pandas as pd
 
+from database import AsrDB
+
 
 # PATH_TO_MAP_KEYFRAMES_FOLDER="./map-keyframes/"
 def find_closest_match_fast(query, sentence, threshold=55):
@@ -114,7 +116,7 @@ def ASR_search_engine_slow(
 
 
 class AsrSearcher:
-    def __init__(self, asr_db):
+    def __init__(self, asr_db: AsrDB):
         self.asr_db = asr_db
 
     def search_fast(self, text, num_img):

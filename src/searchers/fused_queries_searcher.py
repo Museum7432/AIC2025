@@ -8,6 +8,9 @@ import numpy as np
 from PIL import Image
 import heapq
 
+from database import EmbeddingsDB
+from encoders import ClipEncoder, BlipEncoder
+
 
 def fuesd_queries_distance(frames_embs, queries_embs, queries_weights=None):
     # frames_embs (#frames, #dims)
@@ -18,6 +21,9 @@ def fuesd_queries_distance(frames_embs, queries_embs, queries_weights=None):
     # (#queries, #frame)
     pairwise_distance = torch.exp(queries_embs @ frames_embs.T)
 
+    if queries_weights is not None:
+        pairwise_distance = pairwise_distance * queries_weights[:, None]
+
     # (#frame)
     distance = torch.log(pairwise_distance.mean(0))
 
@@ -25,7 +31,12 @@ def fuesd_queries_distance(frames_embs, queries_embs, queries_weights=None):
 
 
 class FusedSearcher:
-    def __init__(self, embs_db, encoder, batch_size=2048):
+    def __init__(
+        self,
+        embs_db: EmbeddingsDB,
+        encoder: Union[ClipEncoder, BlipEncoder],
+        batch_size: int = 2048,
+    ):
 
         self.db = embs_db
         self.encoder = encoder
@@ -33,6 +44,8 @@ class FusedSearcher:
         self.batch_size = batch_size
 
         self.fused_embs = embs_db.fused_embs
+
+        self.device = self.fused_embs.device
 
         assert torch.is_tensor(self.fused_embs)
 
@@ -49,14 +62,17 @@ class FusedSearcher:
 
         # to tensor
         # (#queries, dim)
-        v_queries = torch.from_numpy(v_queries)
+        v_queries = torch.from_numpy(v_queries).to(self.device)
+
+        if queries_weights is not None:
+            queries_weights = torch.tensor(queries_weights).to(self.device)
 
         current_index = 0
 
         results = []
 
         for batch in self.batches:
-            distances = fuesd_queries_distance(batch, v_queries, queries_weights)
+            distances = fuesd_queries_distance(batch, v_queries, queries_weights).cpu().items()
 
             batch_ids = [i + current_index for i in range(len(batch))]
 
@@ -70,7 +86,7 @@ class FusedSearcher:
 
         query_results = []
         for idx, dist in results:
-            vid_name, frame_idx = self.db.get_info(re)
+            vid_name, frame_idx = self.db.get_info(idx)
 
             query_results.append(
                 {
@@ -79,7 +95,7 @@ class FusedSearcher:
                     "video_name": vid_name,
                 }
             )
-        
+
         return query_results
 
     def search_by_texts(self, texts, topk=5):
@@ -88,11 +104,8 @@ class FusedSearcher:
 
         return self.vectors_search(v_queries, topk=topk)
 
-    def search_by_texts(self, images, topk=5):
-        # batch search by text
+    def search_by_images(self, images, topk=5):
+        # batch search by images
         v_queries = self.encoder.encode_images(images, normalization=True)
 
         return self.vectors_search(v_queries, topk=topk)
-    
-    
-    

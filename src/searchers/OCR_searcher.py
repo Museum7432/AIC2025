@@ -4,7 +4,7 @@ import json
 import time
 from tqdm import tqdm
 from joblib import Parallel, delayed
-
+from database import OcrDB
 # Hàm kiểm tra từ gần giống query trong câu
 
 
@@ -72,7 +72,7 @@ def search_in_db_v2(
 
 
 class OcrSearcher:
-    def __init__(self, ocr_db):
+    def __init__(self, ocr_db:OcrDB):
         self.ocr_db = ocr_db
 
     def search(self, query, num_img=10):

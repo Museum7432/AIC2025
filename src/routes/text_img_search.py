@@ -1,4 +1,6 @@
 from fastapi import APIRouter, HTTPException
+import io
+import base64
 
 from .models import SingleTextQuery, SearchResult
 from searchers import Searchers, model_name_to_searcher
