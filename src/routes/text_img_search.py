@@ -12,12 +12,10 @@ def search(request: SingleTextQuery):
 
     query = request.query
 
-    # translate to english
+    # vi2en translation
     # TODO: translation should be in a seperate api
     if request.language == "Vie":
-        # to be backward compatible with previous version
-        #  where a only the first query is translated
-        query = [gpt4_translate_vi2en(query)]
+        query = gpt4_translate_vi2en(query)
         print("Gpt-4 output", query)
 
     topk = request.topk
