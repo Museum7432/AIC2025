@@ -1,3 +1,8 @@
+import sys
+import pathlib
+# required to be run as a module
+sys.path.append(str(pathlib.Path(__file__).parent.resolve()))
+
 import io
 import base64
 from typing import List, Tuple, Dict

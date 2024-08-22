@@ -1,23 +1,39 @@
 services:
   backend-api:
+    environment:
+    # the .env file supersedes these variable
+      - APP_NAME=ELO@AIC Image Semantic Search
+      - gpt_translate_model=gpt-4o-mini
+      - ocr_path=/data/text_extracted
+      - object_counting_path=/data/Object_Counting_vector_np
+      # empty string to deactivate
+      - asr_path=
+      - blip2_embs_path=
+      - clip_H_embs_path=
+      - clip_bigG_embs_path=
+      - clip_B32_embs_path=/data/clip-features-vit-b32
+
     build:
       context: .
-      dockerfile: src/api/Dockerfile
+      dockerfile: ./Dockerfile
     ports:
       - 8000:8000
 
     volumes:
-      - ./:/app/
-      # - /home/toannk/.cache/huggingface:/root/.cache/huggingface
-      # - /home/toannk/.cache/torch:/root/.cache/torch
-      # - ./api:/app/api
-      - ./embeddings:/app/embeddings
-      # - ./texts_extracted:/app/texts_extracted
-      - ./src:/app/src
+      - ./src_new:/src      
+      - ./data:/data
+
+      - ~/.cache/huggingface:/root/.cache/huggingface
+      - ~/.cache/torch:/root/.cache/torch
+      - ~/.cache/clip:/root/.cache/clip
+
+      # config file (contains the openai api key)
+      # - ./.env:/.env
+
     networks:
       - project_network
     entrypoint: >
-      conda run --no-capture-output -n semantic uvicorn src.api.main:app --host 0.0.0.0 --port 8000
+      conda run -n py311 uvicorn src.main:app --host 0.0.0.0 --port 8000
 
   # frontend:
   #   image: aic_be:latest
