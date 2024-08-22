@@ -1,4 +1,4 @@
-from ..config import settings
+from config import settings
 from openai import OpenAI
 
 client = None

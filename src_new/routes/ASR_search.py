@@ -1,18 +1,22 @@
 from fastapi import APIRouter, HTTPException
 
-from .models import Query, SearchResult, Query_ASR
-from ..searchers import Searchers
+from .models import AsrQuery, SearchResult
+from searchers import Searchers
 
 router = APIRouter(prefix="/search_ASR")
 
 
 @router.post("/", response_model=SearchResult)
-def search_ASR(query_requets: Query_ASR) -> SearchResult:
+def search_ASR(query_requets: AsrQuery) -> SearchResult:
+
+    if "asr_searcher" not in Searchers.keys():
+        raise HTTPException(status_code=500, detail="ASR search is not enabled on this server")
+
     query = query_requets.query
-    k = query_requets.k
+    topk = query_requets.topk
     mode = query_requets.mode
     if mode == "slow":
-        results = Searchers["asr_searcher"].search_slow(text=query, num_img=k)
+        results = Searchers["asr_searcher"].search_slow(text=query, num_img=topk)
     elif mode == "fast":
-        results = Searchers["asr_searcher"].search_fast(text=query, num_img=k)
-    return SearchResult(search_result=results)
+        results = Searchers["asr_searcher"].search_fast(text=query, num_img=topk)
+    return SearchResult(results=results)

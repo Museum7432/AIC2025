@@ -2,15 +2,17 @@ import io
 import base64
 from typing import List, Tuple, Dict
 from PIL import Image
+
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException
 
 from pydantic import BaseModel, conlist
 
 # load searchers on startup
 from searchers import SearchersLifespan
-from routes import asr_route, ocr_route, search_route, obj_c_route
+from routes import asr_route, ocr_route, img_search_route, obj_c_route, frame_nei_route
 
-from .config import settings
+from config import settings
 
 app = FastAPI(title=settings.app_name, lifespan=SearchersLifespan)
 
@@ -34,8 +36,9 @@ def home() -> None:
 
 app.include_router(asr_route)
 app.include_router(ocr_route)
-app.include_router(search_route)
+app.include_router(img_search_route)
 app.include_router(obj_c_route)
+app.include_router(frame_nei_route)
 
 
 if __name__ == "__main__":

@@ -22,12 +22,14 @@ class Settings(BaseSettings):
     blip2_embs_path: Union[str, None] = "data/blip2_feature_extractor-ViTG"
 
     clip_H_embs_path: Union[str, None] = "data/ViT-H-14-378-quickgelu-dfn5b"
-    
+
     clip_bigG_embs_path: Union[str, None] = "data/ViT-bigG-14-CLIPA-336-datacomp1b"
 
     # for testing
     # "data/clip-features-vit-b32", "ViT-B-32", "openai"
     clip_B32_embs_path: Union[str, None] = None
+
+    device: str = "cpu"
 
 
 settings = Settings()

@@ -1,0 +1,40 @@
+from fastapi import APIRouter, HTTPException
+
+from .models import SingleTextQuery, SearchResult
+from searchers import Searchers, model_name_to_searcher
+from helpers import gpt4_translate_vi2en
+
+router = APIRouter(prefix="/search")
+
+
+@router.post("/", response_model=SearchResult)
+def search(request: SingleTextQuery):
+
+    query = request.query
+
+    # translate to english
+    # TODO: translation should be in a seperate api
+    if request.language == "Vie":
+        # to be backward compatible with previous version
+        #  where a only the first query is translated
+        query = [gpt4_translate_vi2en(query)]
+        print("Gpt-4 output", query)
+
+    topk = request.topk
+
+    model = request.model
+
+    _searcher = model_name_to_searcher(model)
+
+    _searcher_method = _searcher.batch_search_by_text
+
+
+    if query.startswith("data:image/"):
+
+        query = Image.open(io.BytesIO(base64.b64decode(query.split(",")[1])))
+
+        _searcher_method = _searcher.batch_search_by_image
+
+    result = _searcher_method([query], topk)[0]
+
+    return SearchResult(results=result)

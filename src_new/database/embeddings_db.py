@@ -41,6 +41,7 @@ class EmbeddingsDB:
 
         # map the fused array index into the videos_name index (1d np.array of int)
         # (#videos, )
+        # TODO: optimize this
         self.videos_name = []
         # (total_num_of_frames,)
         self.idx2vid_idx = None

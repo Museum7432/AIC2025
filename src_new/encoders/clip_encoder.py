@@ -27,6 +27,8 @@ class ClipEncoder:
 
         self.text_tokenizer = open_clip.get_tokenizer(model_arch)
 
+        # TODO: use service streamer to handle large amount of requests
+
     def _tokenize_texts(self, texts):
         # open clip has a token limit of 77
         # (#sents, 77)

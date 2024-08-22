@@ -1,21 +1,22 @@
 from fastapi import APIRouter, HTTPException
 
-from .models import Query, SearchResult, Query_OCR, Query_ObjectCount
-from ..searchers import Searchers
+from .models import SearchResult, ObjectCountingQuery
+from searchers import Searchers
 
 router = APIRouter(prefix="/search_ObjectCount")
 
 
-@app.post("/", response_model=SearchResult)
-def search_ObjectCount(query_batch: Query_ObjectCount) -> SearchResult:
-    query = query_batch.query
-    k = query_batch.k
-    mode = query_batch.mode
+@router.post("/", response_model=SearchResult)
+def search_ObjectCount(request: ObjectCountingQuery) -> SearchResult:
+    query = request.query
+    topk = request.topk
+    mode = request.mode
+
     if mode == "slow":
         results = Searchers["objcount_searcher"].search_slow(
-            query[0], topk=k, measure_method="l2_norm"
+            query, topk=topk, measure_method="l2_norm"
         )
     elif mode == "fast":
-        results = Searchers["objcount_searcher"].search_fast(query[0])
+        results = Searchers["objcount_searcher"].search_fast(query)
 
-    return SearchResult(search_result=results)
+    return SearchResult(results=results)

@@ -39,8 +39,8 @@ class FaissSearcher:
 
                 q_re.append(
                     {
-                        "score": distance,
-                        "keyframe_id": frame_idx,
+                        "score": distance.item(),
+                        "keyframe_id": frame_idx.item(),
                         "video_name": vid_name,
                     }
                 )
@@ -63,4 +63,9 @@ class FaissSearcher:
         v_queries = self.encoder.encode_images(images, normalization=True)
 
         return self.batch_vector_search(v_queries, topk=topk)
+    
+    def search_by_indexed_image(self, video_name, frame_idx, topk=5):
+        image_embs = self.db.get_frame_embs(video_name, frame_idx)
+        return self.batch_vector_search(image_embs[None, :], topk=topk)[0]
+
     

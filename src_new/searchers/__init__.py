@@ -24,7 +24,7 @@ def load_seacher():
         B32_clip_db = EmbeddingsDB(settings.clip_B32_embs_path, build_faiss_index=True)
 
         # load the model
-        B32_encoder = ClipEncoder("ViT-B-32", "openai")
+        B32_encoder = ClipEncoder("ViT-B-32", "openai", device="cpu")
 
         # create the searcher
         B32_searcher = FaissSearcher(B32_clip_db, B32_encoder)
@@ -35,7 +35,7 @@ def load_seacher():
     if settings.ocr_path:
         # ocr database
         ocr_db = OcrDB(settings.ocr_path)
-        ocr_searcher = OCR_searcher(ocr_db)
+        ocr_searcher = OcrSearcher(ocr_db)
 
         re["ocr_searcher"] = ocr_searcher
         print("OCR loaded!")
@@ -94,7 +94,7 @@ def load_seacher():
 
 
 def model_name_to_searcher(name):
-    match model:
+    match name:
         case "Blip2-ViTG":
             return Searchers["blip2_searcher"]
         case "ViT 5b":
