@@ -20,7 +20,7 @@ services:
       - 8000:8000
 
     volumes:
-      - ./src_new:/src      
+      - ./src:/src      
       - ./data:/data
 
       - ~/.cache/huggingface:/root/.cache/huggingface
