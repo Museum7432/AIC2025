@@ -14,7 +14,7 @@ class AsrDB:
 
     def load_asr(self, base_path):
         database = []
-        for vid in tqdm(sorted(os.listdir(base_path))):
+        for vid in sorted(os.listdir(base_path)):
             video_path = os.path.join(base_path, vid)
             with open(video_path, "r", encoding="utf-8") as f:
                 data = json.load(f)

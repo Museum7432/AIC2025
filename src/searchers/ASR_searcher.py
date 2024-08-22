@@ -118,7 +118,7 @@ class AsrSearcher:
         self.asr_db = asr_db
 
     def search_fast(self, text, num_img):
-        return ASR_search_engine_fast(text, self.asr_db, num_img=num_img)
+        return ASR_search_engine_fast(text, self.asr_db.db, num_img=num_img)
 
     def search_slow(self, text, num_img):
-        return ASR_search_engine_slow(text, self.asr_db, num_img=num_img)
+        return ASR_search_engine_slow(text, self.asr_db.db, num_img=num_img)
