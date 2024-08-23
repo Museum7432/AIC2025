@@ -25,7 +25,8 @@ def fuesd_queries_distance(frames_embs, queries_embs, queries_weights=None):
         pairwise_distance = pairwise_distance * queries_weights[:, None]
 
     # (#frame)
-    distance = torch.log(pairwise_distance.mean(0))
+    # distance = torch.log(pairwise_distance.mean(0))
+    distance = pairwise_distance.mean(0)
 
     return distance
 
@@ -51,7 +52,7 @@ class FusedSearcher:
 
         self.num_sections = len(self.fused_embs) // batch_size + 1
 
-        self.batches = tensor.chunk(self.fused_embs, self.num_sections)
+        self.batches = torch.chunk(self.fused_embs, self.num_sections)
 
     def vectors_search(self, v_queries, topk=5, queries_weights=None):
         # perform linear search
@@ -72,7 +73,7 @@ class FusedSearcher:
         results = []
 
         for batch in self.batches:
-            distances = fuesd_queries_distance(batch, v_queries, queries_weights).cpu().items()
+            distances = fuesd_queries_distance(batch, v_queries, queries_weights).cpu().tolist()
 
             batch_ids = [i + current_index for i in range(len(batch))]
 
@@ -91,7 +92,7 @@ class FusedSearcher:
             query_results.append(
                 {
                     "score": dist,
-                    "keyframe_id": frame_idx,
+                    "keyframe_id": frame_idx.item(),
                     "video_name": vid_name,
                 }
             )

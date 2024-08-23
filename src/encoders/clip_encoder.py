@@ -42,6 +42,9 @@ class ClipEncoder:
     def encode_images(self, images, normalization=True):
         # images should be a list of PIL.Image
 
+        if len(images) == 0:
+            return []
+
         batch = self._preprocess_images(images)
 
         batch = batch.to(self.device)
@@ -56,6 +59,9 @@ class ClipEncoder:
         return image_features.cpu().numpy()
 
     def encode_texts(self, texts, normalization=True):
+
+        if len(texts) == 0:
+            return []
         batch = self._tokenize_texts(texts)
 
         batch = batch.to(self.device)

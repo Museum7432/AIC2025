@@ -15,7 +15,7 @@ from pydantic import BaseModel, conlist
 
 # load searchers on startup
 from searchers import SearchersLifespan
-from routes import asr_route, ocr_route, img_search_route, obj_c_route, frame_nei_route
+from routes import asr_route, ocr_route, img_search_route, obj_c_route, frame_nei_route, fuse_route
 
 from config import settings
 
@@ -44,6 +44,7 @@ app.include_router(ocr_route)
 app.include_router(img_search_route)
 app.include_router(obj_c_route)
 app.include_router(frame_nei_route)
+app.include_router(fuse_route)
 
 
 if __name__ == "__main__":

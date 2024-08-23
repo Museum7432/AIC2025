@@ -11,6 +11,10 @@ class SingleTextQuery(BaseModel):
     model: str = "vit-b32"
     language: str
 
+class MultiQuery(BaseModel):
+    query: List[str]
+    topk: int = 10
+    model: str = "vit-b32"
 
 # class Query_OCR(BaseModel):
 #     query: conlist(item_type=str, min_length=1, max_length=5)  # type: ignore

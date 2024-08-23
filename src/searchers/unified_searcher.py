@@ -39,7 +39,7 @@ def convert_image_query(query):
     return pil_img
 
 
-def get_query_type(text):
+def get_query_type(query):
     if query.startswith("+f ") or query.startswith("-f "):
         return "frame"
 
@@ -52,7 +52,7 @@ def get_query_type(text):
 class UnifiedSearcher:
     def __init__(self, searcher: FusedSearcher):
         # accepting texts, imgs, frames_id as input
-        # performs search with input searcher
+        # performs search with the input searcher
 
         self.searcher = searcher
 
@@ -97,7 +97,7 @@ class UnifiedSearcher:
         for (i, q), i_embs in zip(imgs_q, imgs_embs):
             results[i] = i_embs
 
-        assert None not in results
+        # assert None not in results
 
         return np.array(results)
 
@@ -108,13 +108,13 @@ class UnifiedSearcher:
         # image query should have a lower weight than text query
         queries_type = [get_query_type(q) for q in queries]
 
-        queries_weights = [100 if t == "text" else 1 for t in queries_type]
+        queries_weights = [2 if t == "text" else 1 for t in queries_type]
 
         # query start with '-' will be treated as a negative query
         # .i.e: return images that are the farthest to these queries
 
         queries_weights = [
-            -w if q.startswith("-") and type != "text" else w
+            -w if q.startswith("-") and t != "text" else w
             for q, w, t in zip(queries, queries_weights, queries_type)
         ]
 

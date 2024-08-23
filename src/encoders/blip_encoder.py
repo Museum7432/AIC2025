@@ -39,6 +39,9 @@ class BlipEncoder:
     def encode_images(self, images, normalization=True):
         # images should be a list of PIL.Image
 
+        if len(images) == 0:
+            return []
+
         batch = self._preprocess_images(images)
 
         batch = batch.to(self.device)
@@ -57,6 +60,8 @@ class BlipEncoder:
         return image_features.cpu().numpy()
 
     def encode_texts(self, texts, normalization=True):
+        if len(texts) == 0:
+            return []
         texts = self._preprocess_texts(texts)
 
         sample = {"text_input": texts}

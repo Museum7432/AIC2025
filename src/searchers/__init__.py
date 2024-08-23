@@ -30,7 +30,12 @@ def load_seacher():
         # create the searcher
         B32_searcher = FaissSearcher(B32_clip_db, B32_encoder)
 
+        B32_fused_searcher = UnifiedSearcher(
+            FusedSearcher(B32_clip_db, B32_encoder, batch_size=2048)
+        )
+
         re["B32_searcher"] = B32_searcher
+        re["B32_fused_searcher"] = B32_fused_searcher
         print("clip B32 loaded!")
 
     if settings.ocr_path:
@@ -63,7 +68,12 @@ def load_seacher():
 
         blip2_searcher = FaissSearcher(blip2_db, blip2_encoder)
 
+        blip2_fused_searcher = UnifiedSearcher(
+            FusedSearcher(blip2_db, blip2_encoder, batch_size=2048)
+        )
+
         re["blip2_searcher"] = blip2_searcher
+        re["blip2_fused_searcher"] = blip2_fused_searcher
 
         print("BLIP2 loaded!")
 
@@ -74,9 +84,15 @@ def load_seacher():
 
         clip_H_searcher = FaissSearcher(clip_H_db, clip_H_encoder)
 
-        re["clip_H_searcher"] = clip_H_searcher
+        clip_H_fused_searcher = UnifiedSearcher(
+            FusedSearcher(clip_H_db, clip_H_encoder, batch_size=2048)
+        )
 
-        print(" ViT-H-14-378-quickgelu!")
+        re["clip_H_searcher"] = clip_H_searcher
+        re["clip_H_fused_searcher"] = clip_H_fused_searcher
+        
+
+        print(" ViT-H-14-378-quickgelu loaded!")
 
     if settings.clip_bigG_embs_path:
         clip_BigG_db = EmbeddingsDB(
@@ -87,9 +103,14 @@ def load_seacher():
 
         clip_BigG_searcher = FaissSearcher(clip_BigG_db, clip_BigG_encoder)
 
-        re["clip_BigG_searcher"] = clip_BigG_searcher
+        clip_BigG_fused_searcher = UnifiedSearcher(
+            FusedSearcher(clip_BigG_db, clip_BigG_encoder, batch_size=2048)
+        )
 
-        print("ViT-bigG-14-CLIPA-336")
+        re["clip_BigG_searcher"] = clip_BigG_searcher
+        re["clip_BigG_fused_searcher"] = clip_BigG_fused_searcher
+
+        print("ViT-bigG-14-CLIPA-336 loaded!")
 
     return re
 
