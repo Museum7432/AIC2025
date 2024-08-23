@@ -8,6 +8,8 @@ from .ObjectCountSearcher import ObjectCountSearcher
 from .OCR_searcher import OcrSearcher
 from .unified_searcher import UnifiedSearcher
 
+from .temporal_queries_searcher import TemporalSearcher
+
 from database import *
 from encoders import ClipEncoder, BlipEncoder
 
@@ -34,8 +36,13 @@ def load_seacher():
             FusedSearcher(B32_clip_db, B32_encoder, batch_size=2048)
         )
 
+        B32_temporal_searcher = UnifiedSearcher(
+            TemporalSearcher(B32_clip_db, B32_encoder)
+        )
+
         re["B32_searcher"] = B32_searcher
         re["B32_fused_searcher"] = B32_fused_searcher
+        re["B32_temporal_searcher"] = B32_temporal_searcher
         print("clip B32 loaded!")
 
     if settings.ocr_path:
@@ -72,8 +79,13 @@ def load_seacher():
             FusedSearcher(blip2_db, blip2_encoder, batch_size=2048)
         )
 
+        blip2_temporal_searcher = UnifiedSearcher(
+            TemporalSearcher(blip2_db, blip2_encoder)
+        )
+
         re["blip2_searcher"] = blip2_searcher
         re["blip2_fused_searcher"] = blip2_fused_searcher
+        re["blip2_temporal_searcher"] = blip2_temporal_searcher
 
         print("BLIP2 loaded!")
 
@@ -88,9 +100,13 @@ def load_seacher():
             FusedSearcher(clip_H_db, clip_H_encoder, batch_size=2048)
         )
 
+        clip_H_temporal_searcher = UnifiedSearcher(
+            TemporalSearcher(clip_H_db, clip_H_encoder)
+        )
+
         re["clip_H_searcher"] = clip_H_searcher
         re["clip_H_fused_searcher"] = clip_H_fused_searcher
-        
+        re["clip_H_temporal_searcher"] = clip_H_temporal_searcher
 
         print(" ViT-H-14-378-quickgelu loaded!")
 
@@ -107,8 +123,13 @@ def load_seacher():
             FusedSearcher(clip_BigG_db, clip_BigG_encoder, batch_size=2048)
         )
 
+        clip_temporal_fused_searcher = UnifiedSearcher(
+            TemporalSearcher(clip_BigG_db, clip_BigG_encoder)
+        )
+
         re["clip_BigG_searcher"] = clip_BigG_searcher
         re["clip_BigG_fused_searcher"] = clip_BigG_fused_searcher
+        re["clip_temporal_fused_searcher"] = clip_temporal_fused_searcher
 
         print("ViT-bigG-14-CLIPA-336 loaded!")
 
