@@ -22,6 +22,8 @@ def load_seacher():
 
     re = {}
 
+    print("preparing searchers!")
+
     if settings.clip_B32_embs_path:
         # load the embeddings
         B32_clip_db = EmbeddingsDB(settings.clip_B32_embs_path, build_faiss_index=True)
@@ -43,6 +45,7 @@ def load_seacher():
         re["B32_searcher"] = B32_searcher
         re["B32_fused_searcher"] = B32_fused_searcher
         re["B32_temporal_searcher"] = B32_temporal_searcher
+
         print("clip B32 loaded!")
 
     if settings.ocr_path:
