@@ -1,5 +1,7 @@
 services:
   backend-api:
+    # tty: true
+
     environment:
     # the .env file supersedes these variable
       - APP_NAME=ELO@AIC Image Semantic Search

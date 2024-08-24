@@ -74,7 +74,7 @@ def load_seacher():
     if settings.blip2_embs_path:
         blip2_db = EmbeddingsDB(settings.blip2_embs_path, build_faiss_index=True)
 
-        blip2_encoder = BlipEncoder("blip2_feature_extractor", "pretrain")
+        blip2_encoder = BlipEncoder("blip2_feature_extractor", "pretrain", device="cpu")
 
         blip2_searcher = FaissSearcher(blip2_db, blip2_encoder)
 
@@ -95,7 +95,7 @@ def load_seacher():
     if settings.clip_H_embs_path:
         clip_H_db = EmbeddingsDB(settings.clip_H_embs_path, build_faiss_index=True)
 
-        clip_H_encoder = ClipEncoder("ViT-H-14-378-quickgelu", "dfn5b")
+        clip_H_encoder = ClipEncoder("ViT-H-14-378-quickgelu", "dfn5b", device="cpu")
 
         clip_H_searcher = FaissSearcher(clip_H_db, clip_H_encoder)
 
@@ -118,7 +118,7 @@ def load_seacher():
             settings.clip_bigG_embs_path, build_faiss_index=True
         )
 
-        clip_BigG_encoder = ClipEncoder("ViT-bigG-14-CLIPA-336", "datacomp1b")
+        clip_BigG_encoder = ClipEncoder("ViT-bigG-14-CLIPA-336", "datacomp1b", device="cpu")
 
         clip_BigG_searcher = FaissSearcher(clip_BigG_db, clip_BigG_encoder)
 
