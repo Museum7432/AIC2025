@@ -12,17 +12,17 @@ from database import EmbeddingsDB
 from encoders import ClipEncoder, BlipEncoder
 
 # temporal_matching but return the frame associated with each query
-# def get_best_matched_pair(pairwise_distance):
-#   # pairwise_distance: (#queries, #frame)
+# def get_best_matched_pair(pairwise_sim):
+#   # pairwise_sim: (#queries, #frame)
 
-#   num_query, num_frame = pairwise_distance.shape
+#   num_query, num_frame = pairwise_sim.shape
 
 #   score = np.zeros(num_frame)
-#   trace = np.zeros_like(pairwise_distance, dtype="int")
+#   trace = np.zeros_like(pairwise_sim, dtype="int")
 
 #   for i in range(num_query):
 #     trace[i] = cumargmax(score)
-#     score = np.maximum.accumulate(score) + pairwise_distance[i]
+#     score = np.maximum.accumulate(score) + pairwise_sim[i]
 
 #   best_score = np.max(score)
 
@@ -33,9 +33,9 @@ from encoders import ClipEncoder, BlipEncoder
 
 #   return best_score, final_trace[::-1]
 
-def temporal_matching(pairwise_distance):
-    # pairwise_distance: (#queries, #frame)
-    num_queries, num_frames = pairwise_distance.shape
+def temporal_matching(pairwise_sim):
+    # pairwise_sim: (#queries, #frame)
+    num_queries, num_frames = pairwise_sim.shape
 
     score = None
 
@@ -43,9 +43,11 @@ def temporal_matching(pairwise_distance):
         # TODO: roll the cummax so that the same frame cannot be selected twice
 
         if score is None:
-            score = pairwise_distance[i]
+            score = pairwise_sim[i]
         else:
             score = torch.cummax(score, dim=0).values
+
+            score = score + pairwise_sim[i]
     return score
 
 class TemporalSearcher:
@@ -99,10 +101,10 @@ class TemporalSearcher:
                 vid_embs = torch.flip(vid_embs, dims=0)
 
             # (#queries, #frame)
-            pairwise_distance = np.exp(v_queries @ vid_embs.T)
+            pairwise_sim = np.exp(v_queries @ vid_embs.T)
 
             # (#frame)
-            score = temporal_matching(pairwise_distance)
+            score = temporal_matching(pairwise_sim)
 
             if return_first:
                 score = torch.flip(score, dims=0)
