@@ -31,11 +31,13 @@ def get_flatten_index_mapping(arr):
 
 class EmbeddingsDB:
     """
-    Store the raw (not normalized) embeddings
-    in concatenated form, as well as the mapping from
+    Store the embeddings (normalized) in
+    concatenated form, as well as the mapping from
     the concatenated array index to the video keyframe index
+    the index return by faiss is the same as the the concatenated array index
     """
-    #TODO: map the keyframe index to the acture video frame index
+
+    # TODO: map the keyframe index to the acture video frame index
 
     def __init__(self, embs_base_path):
 
@@ -89,7 +91,6 @@ class EmbeddingsDB:
             # save video name
             video_name = embs_lp.split(".")[0]
 
-
             self.videos_name.append(video_name)
 
             if self.embs_dim is None:
@@ -106,6 +107,9 @@ class EmbeddingsDB:
 
         # convert to tensor
         self.fused_embs = torch.from_numpy(self.fused_embs)
+
+        # normalize the embs
+        self.fused_embs = torch.nn.functional.normalize(self.fused_embs, dim=-1)
 
     def get_info(self, fused_frame_idx):
         # return video name, frame id

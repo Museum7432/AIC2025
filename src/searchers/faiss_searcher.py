@@ -10,6 +10,8 @@ from PIL import Image
 from database import EmbeddingsDB
 from encoders import ClipEncoder, BlipEncoder
 
+from utils import normalized_np
+
 
 class FaissSearcher:
     def __init__(self, embs_db: EmbeddingsDB, encoder: Union[ClipEncoder, BlipEncoder]):
@@ -17,19 +19,19 @@ class FaissSearcher:
         self.encoder = encoder
 
         # build the faiss indexer
-        norm_embs = (
-            torch.nn.functional.normalize(embs_db.fused_embs, dim=-1).cpu().numpy()
-        )
 
-        # TODO: IndexFlatL2 is a brute-force indexer (.i.e: is no different than linear search)
-        # we might want to use cosine similarity instead of L2
-        self.faiss_index = faiss.IndexFlatL2(embs_db.embs_dim)
+        # IndexFlatL2 is a brute-force indexer (.i.e: is no different than linear search)
+        # we might want to use cosine similarity instead of L2 (IndexFlatIP)
+        self.faiss_index = faiss.IndexFlatIP(embs_db.embs_dim)
 
-        self.faiss_index.add(norm_embs)
+        self.faiss_index.add(embs_db.fused_embs)
 
     def batch_vector_search(self, v_queries, topk=5):
         # perform search by vector (independently)
         # v_queries should be a numpy array
+
+        # normalize the query
+        v_queries = normalized_np(v_queries)
 
         D, I = self.faiss_index.search(v_queries, topk)
 
@@ -60,7 +62,7 @@ class FaissSearcher:
 
     def batch_search_by_text(self, texts, topk=5):
         # batch search by text
-        v_queries = self.encoder.encode_texts(texts, normalization=True)
+        v_queries = self.encoder.encode_texts(texts)
 
         return self.batch_vector_search(v_queries, topk=topk)
 
@@ -68,7 +70,7 @@ class FaissSearcher:
         # batch search by images
         # images should be a list of PIL.Image
 
-        v_queries = self.encoder.encode_images(images, normalization=True)
+        v_queries = self.encoder.encode_images(images)
 
         return self.batch_vector_search(v_queries, topk=topk)
 

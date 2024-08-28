@@ -55,3 +55,9 @@ def load_files_list(base_dir, files_list_path, with_extension=None, mkdir=False)
                 pathlib.Path(p).parent.mkdir(parents=True, exist_ok=True)
 
     return file_path
+
+
+def normalized_np(a, axis=-1, order=2):
+    l2 = np.atleast_1d(np.linalg.norm(a, order, axis))
+    l2[l2==0] = 1
+    return a / np.expand_dims(l2, axis)

@@ -70,8 +70,8 @@ class UnifiedSearcher:
         texts_q = [(i, q) for i, q in enumerate(queries) if get_query_type(q) == "text"]
 
         texts_embs = self.encoder.encode_texts(
-            [q[-1] for q in texts_q], normalization=True
-        )
+            [q[-1] for q in texts_q]
+        )  # feature normalization should be done by the searcher
 
         for (i, q), q_embs in zip(texts_q, texts_embs):
             results[i] = q_embs
@@ -92,7 +92,7 @@ class UnifiedSearcher:
 
         pil_imgs = [convert_image_query(q[-1]) for q in imgs_q]
 
-        imgs_embs = self.encoder.encode_images(pil_imgs, normalization=True)
+        imgs_embs = self.encoder.encode_images(pil_imgs)
 
         for (i, q), i_embs in zip(imgs_q, imgs_embs):
             results[i] = i_embs

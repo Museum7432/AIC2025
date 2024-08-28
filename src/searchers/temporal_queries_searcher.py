@@ -108,6 +108,9 @@ class TemporalSearcher:
         # (#queries, dim)
         v_queries = torch.from_numpy(v_queries).to(self.device)
 
+        # normalize the query
+        v_queries = torch.nn.functional.normalize(v_queries, dim=-1)
+
         if return_first:
             v_queries = torch.flip(v_queries, dims=0)
 

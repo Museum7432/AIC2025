@@ -44,17 +44,20 @@ class FusedSearcher:
 
         self.batch_size = batch_size
 
-        self.fused_embs = embs_db.fused_embs
+        fused_embs = embs_db.fused_embs
 
-        self.device = self.fused_embs.device
+        self.device = fused_embs.device
 
-        assert torch.is_tensor(self.fused_embs)
+        assert torch.is_tensor(fused_embs)
 
-        self.num_sections = len(self.fused_embs) // batch_size + 1
+        self.num_sections = len(fused_embs) // batch_size + 1
 
-        self.batches = torch.chunk(self.fused_embs, self.num_sections)
+        self.batches = torch.chunk(fused_embs, self.num_sections)
 
-    def vectors_search(self, v_queries, topk=5, queries_weights=None, return_first=False):
+
+    def vectors_search(
+        self, v_queries, topk=5, queries_weights=None, return_first=False
+    ):
         # perform linear search
         # return topk instances with the minimum total
         # distance to all queries
@@ -62,10 +65,14 @@ class FusedSearcher:
         # return_first: for compatibility with TemporalSearcher
 
         # v_queries should be a numpy array
+        # and should not be normalized if feature_normalization is on
 
         # to tensor
         # (#queries, dim)
         v_queries = torch.from_numpy(v_queries).to(self.device)
+
+        # normalize the query
+        v_queries = torch.nn.functional.normalize(v_queries, dim=-1)
 
         if queries_weights is not None:
             queries_weights = torch.tensor(queries_weights).to(self.device)
@@ -75,7 +82,9 @@ class FusedSearcher:
         results = []
 
         for batch in self.batches:
-            distances = fuesd_queries_distance(batch, v_queries, queries_weights).cpu().tolist()
+            distances = (
+                fuesd_queries_distance(batch, v_queries, queries_weights).cpu().tolist()
+            )
 
             batch_ids = [i + current_index for i in range(len(batch))]
 
@@ -103,12 +112,12 @@ class FusedSearcher:
 
     def search_by_texts(self, texts, topk=5):
         # batch search by text
-        v_queries = self.encoder.encode_texts(texts, normalization=True)
+        v_queries = self.encoder.encode_texts(texts, normalization=False)
 
         return self.vectors_search(v_queries, topk=topk)
 
     def search_by_images(self, images, topk=5):
         # batch search by images
-        v_queries = self.encoder.encode_images(images, normalization=True)
+        v_queries = self.encoder.encode_images(images, normalization=False)
 
         return self.vectors_search(v_queries, topk=topk)
