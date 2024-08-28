@@ -33,22 +33,48 @@ from encoders import ClipEncoder, BlipEncoder
 
 #   return best_score, final_trace[::-1]
 
+
 def temporal_matching(pairwise_sim):
     # pairwise_sim: (#queries, #frame)
     num_queries, num_frames = pairwise_sim.shape
 
     score = None
 
+    traces = []
+
     for i in range(num_queries):
-        # TODO: roll the cummax so that the same frame cannot be selected twice
 
-        if score is None:
-            score = pairwise_sim[i]
+        if i == 0:
+            # the first query
+            score = pairwise_sim[0]
+
+            traces.append([j for j in range(num_frames)])
+
         else:
-            score = torch.cummax(score, dim=0).values
+            best_prev_score = torch.cummax(score, dim=0)
 
-            score = score + pairwise_sim[i]
-    return score
+            # roll the cummax so that the same frame cannot be selected twice
+            score = best_prev_score.values[:-1] + pairwise_sim[i][i:]
+
+            # save the best previous frame index
+            traces.append([0] * (i) + (best_prev_score.indices[:-1].cpu() + i).tolist())
+
+    score = score.cpu().tolist()
+
+    score = [float("Inf")] * num_queries + score
+
+    matched_ids = [[i] for i in range(num_frames)][num_queries:]
+
+    for t in traces[1:][::-1]:
+        for i in range(len(matched_ids)):
+            matched_ids[i].append(t[matched_ids[i][-1]])
+
+    matched_ids = [[]] * num_queries + matched_ids
+
+    matched_ids = [a[::-1] for a in matched_ids]
+
+    return score, matched_ids
+
 
 class TemporalSearcher:
     def __init__(
@@ -65,12 +91,14 @@ class TemporalSearcher:
 
         assert torch.is_tensor(self.fused_embs)
 
-    def vectors_search(self, v_queries, topk=5, queries_weights=None, return_first=False):
+    def vectors_search(
+        self, v_queries, topk=5, queries_weights=None, return_first=False
+    ):
         # for each video, match each query with its associated frame
         # in a consecutive order
 
-        # return_first: the score of each frame is the maximum score 
-        # of all sequences of frames that start with that frame  
+        # return_first: the score of each frame is the maximum score
+        # of all sequences of frames that start with that frame
         # if false then the maximum score of all sequences that end with
         # that frame
 
@@ -85,7 +113,6 @@ class TemporalSearcher:
 
         if queries_weights is not None:
             queries_weights = torch.tensor(queries_weights).to(self.device)
-
 
         current_index = 0
 
@@ -104,18 +131,19 @@ class TemporalSearcher:
             pairwise_sim = np.exp(v_queries @ vid_embs.T)
 
             # (#frame)
-            score = temporal_matching(pairwise_sim)
+            score, matched_ids = temporal_matching(pairwise_sim)
 
             if return_first:
                 score = torch.flip(score, dims=0)
 
-            score = score.cpu().tolist()
+                for i in range(len(matched_ids)):
+                    matched_ids[i] = [len(vid_embs) - j for j in matched_ids[i]]
 
             batch_ids = [i + current_index for i in range(len(score))]
-            
+
             for idx, sim in zip(batch_ids, score):
                 results.append((idx, sim))
-            
+
             if len(results) > topk:
                 results = heapq.nlargest(topk, results, key=lambda x: x[-1])
 

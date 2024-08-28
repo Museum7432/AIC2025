@@ -26,7 +26,7 @@ def load_seacher():
 
     if settings.clip_B32_embs_path:
         # load the embeddings
-        B32_clip_db = EmbeddingsDB(settings.clip_B32_embs_path, build_faiss_index=True)
+        B32_clip_db = EmbeddingsDB(settings.clip_B32_embs_path)
 
         # load the model
         B32_encoder = ClipEncoder("ViT-B-32", "openai", device="cpu")
@@ -72,7 +72,7 @@ def load_seacher():
         print("ASR loaded!")
 
     if settings.blip2_embs_path:
-        blip2_db = EmbeddingsDB(settings.blip2_embs_path, build_faiss_index=True)
+        blip2_db = EmbeddingsDB(settings.blip2_embs_path)
 
         blip2_encoder = BlipEncoder("blip2_feature_extractor", "pretrain", device="cpu")
 
@@ -93,7 +93,7 @@ def load_seacher():
         print("BLIP2 loaded!")
 
     if settings.clip_H_embs_path:
-        clip_H_db = EmbeddingsDB(settings.clip_H_embs_path, build_faiss_index=True)
+        clip_H_db = EmbeddingsDB(settings.clip_H_embs_path)
 
         clip_H_encoder = ClipEncoder("ViT-H-14-378-quickgelu", "dfn5b", device="cpu")
 
@@ -115,7 +115,7 @@ def load_seacher():
 
     if settings.clip_bigG_embs_path:
         clip_BigG_db = EmbeddingsDB(
-            settings.clip_bigG_embs_path, build_faiss_index=True
+            settings.clip_bigG_embs_path
         )
 
         clip_BigG_encoder = ClipEncoder("ViT-bigG-14-CLIPA-336", "datacomp1b", device="cpu")

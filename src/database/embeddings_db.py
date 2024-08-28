@@ -6,6 +6,8 @@ import json
 from typing import List, Tuple, Dict
 import os
 
+from utils import list_file_recursively
+
 
 def get_start_end_indices(arr):
     # arr: array of arrays
@@ -28,9 +30,16 @@ def get_flatten_index_mapping(arr):
 
 
 class EmbeddingsDB:
-    def __init__(self, embs_base_path, build_faiss_index=False):
+    """
+    Store the raw (not normalized) embeddings
+    in concatenated form, as well as the mapping from
+    the concatenated array index to the video keyframe index
+    """
+    #TODO: map the keyframe index to the acture video frame index
+
+    def __init__(self, embs_base_path):
+
         self.embs_base_path = embs_base_path
-        self.build_faiss_index = build_faiss_index
         self.embs_dim = None
 
         # concatenate all videos' embeddings into a single array for
@@ -51,16 +60,10 @@ class EmbeddingsDB:
         # (#videos, 2)
         self.vid_idx2idx = None
 
-        # TODO: perform normalization and convert embs to tensor
         self._load_embs()
 
         # embs_dim, vid_idx2idx,... should be set by _load_embs
         assert len(self.videos_name) == len(self.vid_idx2idx)
-
-        self.faiss_index = None
-
-        if build_faiss_index:
-            self._load_faiss()
 
     def _load_embs(self):
 
@@ -69,11 +72,13 @@ class EmbeddingsDB:
         frames_embs = []
         start_index = 0
 
-        for embs_file in sorted(os.listdir(self.embs_base_path)):
-            embs_path = os.path.join(self.embs_base_path, embs_file)
+        embs_relative_path = list_file_recursively(self.embs_base_path)
 
-            if not embs_path.endswith(".npy"):
+        for embs_lp in embs_relative_path:
+            if not embs_lp.endswith(".npy"):
                 raise ValueError(f"unrecognized embedding file extension {embs_path}")
+
+            embs_path = os.path.join(self.embs_base_path, embs_lp)
 
             # load frame embeddings
             video_embs = np.load(embs_path)
@@ -82,7 +87,9 @@ class EmbeddingsDB:
             frames_embs.append(video_embs)
 
             # save video name
-            video_name = embs_file.split(".")[0]
+            video_name = embs_lp.split(".")[0]
+
+
             self.videos_name.append(video_name)
 
             if self.embs_dim is None:
@@ -99,14 +106,6 @@ class EmbeddingsDB:
 
         # convert to tensor
         self.fused_embs = torch.from_numpy(self.fused_embs)
-
-    def _load_faiss(self):
-        assert self.fused_embs is not None
-        # TODO: IndexFlatL2 is a brute-force indexer (.i.e: is no different than linear search)
-        # we might want to use cosine similarity instead of L2
-        # faiss operation should be in the searcher class
-        self.faiss_index = faiss.IndexFlatL2(self.embs_dim)
-        self.faiss_index.add(self.fused_embs.numpy())
 
     def get_info(self, fused_frame_idx):
         # return video name, frame id

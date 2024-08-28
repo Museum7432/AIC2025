@@ -16,10 +16,16 @@ class FaissSearcher:
         self.db = embs_db
         self.encoder = encoder
 
-        assert (
-            embs_db.faiss_index is not None
-        ), "the embedding database should have faiss enabled"
-        self.faiss_index = embs_db.faiss_index
+        # build the faiss indexer
+        norm_embs = (
+            torch.nn.functional.normalize(embs_db.fused_embs, dim=-1).cpu().numpy()
+        )
+
+        # TODO: IndexFlatL2 is a brute-force indexer (.i.e: is no different than linear search)
+        # we might want to use cosine similarity instead of L2
+        self.faiss_index = faiss.IndexFlatL2(embs_db.embs_dim)
+
+        self.faiss_index.add(norm_embs)
 
     def batch_vector_search(self, v_queries, topk=5):
         # perform search by vector (independently)

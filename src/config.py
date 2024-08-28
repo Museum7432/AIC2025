@@ -19,14 +19,14 @@ class Settings(BaseSettings):
 
     asr_path: Union[str, None] = "data/ASR_folder"
 
-    blip2_embs_path: Union[str, None] = "data/blip2_feature_extractor-ViTG"
+    blip2_embs_path: Union[str, None] = "data/keyframes_embs_blip2"
 
-    clip_H_embs_path: Union[str, None] = "data/ViT-H-14-378-quickgelu-dfn5b"
+    clip_H_embs_path: Union[str, None] = "data/keyframes_embs_clip_H"
 
     clip_bigG_embs_path: Union[str, None] = "data/ViT-bigG-14-CLIPA-336-datacomp1b"
 
     # for testing
-    # "data/clip-features-vit-b32", "ViT-B-32", "openai"
+    # "data/keyframes_embs_clip_B32", "ViT-B-32", "openai"
     clip_B32_embs_path: Union[str, None] = None
 
     device: str = "cpu"
