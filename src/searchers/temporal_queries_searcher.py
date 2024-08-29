@@ -61,7 +61,7 @@ def temporal_matching(pairwise_sim):
 
     score = score.cpu().tolist()
 
-    score = [float("Inf")] * num_queries + score
+    score = [float("-Inf")] * num_queries + score
 
     matched_ids = [[i] for i in range(num_frames)][num_queries:]
 
