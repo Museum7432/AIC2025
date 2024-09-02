@@ -65,7 +65,7 @@ def temporal_matching(pairwise_sim, match_first=False, return_match_ids=False):
         score = np.flip(score)
 
     if not return_match_ids:
-        return score, None
+        return score, [[]] * len(score)
 
     matched_ids = [[i] for i in range(num_frames)]
 
@@ -75,10 +75,11 @@ def temporal_matching(pairwise_sim, match_first=False, return_match_ids=False):
 
     matched_ids = [a[::-1] for a in matched_ids]
 
-    matched_ids = np.array(matched_ids)
 
     if match_first:
+        matched_ids = np.array(matched_ids)
         matched_ids = num_frames - 1 - np.flip(matched_ids, axis=(0, 1))
+        matched_ids=matched_ids.tolist()
 
     return score, matched_ids
 
@@ -167,7 +168,7 @@ class TemporalSearcher:
                     "score": dist.item(),
                     "keyframe_id": frame_idx.item(),
                     "video_name": vid_name,
-                    "matched_frames": matched_frames.tolist(),
+                    "matched_frames": matched_frames,
                 }
             )
 

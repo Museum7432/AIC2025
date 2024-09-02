@@ -30,6 +30,6 @@ def search_temporal(request: TemporalQuery) -> SearchResult:
 
     _searcher = get_searcher(request.model)
 
-    results = _searcher.search(queries, topk)
+    results = _searcher.search(queries, topk, match_first=match_first, return_match_ids=return_match_ids)
 
     return SearchResult(results=results)
