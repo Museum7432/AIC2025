@@ -101,7 +101,7 @@ class UnifiedSearcher:
 
         return np.array(results)
 
-    def search(self, queries: List[str], topk=5):
+    def search(self, queries: List[str], topk=5, **kwargs):
 
         v_queries = self.get_queries_embs(queries)
 
@@ -118,6 +118,9 @@ class UnifiedSearcher:
             for q, w, t in zip(queries, queries_weights, queries_type)
         ]
 
+        if "queries_weights" not in kwargs or kwargs["queries_weights"] is None:
+            kwargs["queries_weights"] = queries_weights
+
         return self.searcher.vectors_search(
-            v_queries, topk=topk, queries_weights=queries_weights
+            v_queries, topk=topk, **kwargs
         )

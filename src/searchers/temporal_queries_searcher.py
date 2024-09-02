@@ -11,67 +11,74 @@ import heapq
 from database import EmbeddingsDB
 from encoders import ClipEncoder, BlipEncoder
 
-# temporal_matching but return the frame associated with each query
-# def get_best_matched_pair(pairwise_sim):
-#   # pairwise_sim: (#queries, #frame)
 
-#   num_query, num_frame = pairwise_sim.shape
-
-#   score = np.zeros(num_frame)
-#   trace = np.zeros_like(pairwise_sim, dtype="int")
-
-#   for i in range(num_query):
-#     trace[i] = cumargmax(score)
-#     score = np.maximum.accumulate(score) + pairwise_sim[i]
-
-#   best_score = np.max(score)
-
-#   final_trace = [np.argmax(score)]
-
-#   for t in trace[1:][::-1]:
-#     final_trace.append(t[final_trace[-1]])
-
-#   return best_score, final_trace[::-1]
+def cumargmax(a):
+    m = np.maximum.accumulate(a)
+    x = np.arange(a.shape[0])
+    x[1:] *= m[:-1] < m[1:]
+    np.maximum.accumulate(x, axis=0, out=x)
+    return x
 
 
-def temporal_matching(pairwise_sim):
+def temporal_matching(pairwise_sim, match_first=False, return_match_ids=False):
     # pairwise_sim: (#queries, #frame)
     num_queries, num_frames = pairwise_sim.shape
+
+    if torch.is_tensor(pairwise_sim):
+        pairwise_sim = pairwise_sim.numpy()
+
+    # match_first: filp both the queries and the frames before matching
+    if match_first:
+        pairwise_sim = np.flip(pairwise_sim, axis=(0, 1))
 
     score = None
 
     traces = []
 
     for i in range(num_queries):
-
         if i == 0:
             # the first query
             score = pairwise_sim[0]
 
-            traces.append([j for j in range(num_frames)])
-
         else:
-            best_prev_score = torch.cummax(score, dim=0)
+            cummax_indices = cumargmax(score)
 
             # roll the cummax so that the same frame cannot be selected twice
-            score = best_prev_score.values[:-1] + pairwise_sim[i][i:]
+            cummax_indices = cummax_indices[:-1]
 
-            # save the best previous frame index
-            traces.append([0] * (i) + (best_prev_score.indices[:-1].cpu() + i).tolist())
+            shifted_len = num_frames - len(cummax_indices)
 
-    score = score.cpu().tolist()
+            cummax_values = score[cummax_indices]
 
-    score = [float("-Inf")] * num_queries + score
+            score = cummax_values + pairwise_sim[i][shifted_len:]
 
-    matched_ids = [[i] for i in range(num_frames)][num_queries:]
+            if return_match_ids:
+                # save the best previous frame index
+                traces.append(
+                    [0] * (shifted_len) + (cummax_indices + shifted_len - 1).tolist()
+                )
 
-    for t in traces[1:][::-1]:
+    shifted_len = num_frames - len(score)
+
+    score = np.pad(score, pad_width=(shifted_len, 0), constant_values=float("-Inf"))
+    if match_first:
+        score = np.flip(score)
+
+    if not return_match_ids:
+        return score, None
+
+    matched_ids = [[i] for i in range(num_frames)]
+
+    for t in traces[::-1]:
         for i in range(len(matched_ids)):
             matched_ids[i].append(t[matched_ids[i][-1]])
 
-    matched_ids = [[]] * num_queries + matched_ids
-
     matched_ids = [a[::-1] for a in matched_ids]
+
+    matched_ids = np.array(matched_ids)
+
+    if match_first:
+        matched_ids = num_frames - 1 - np.flip(matched_ids, axis=(0, 1))
 
     return score, matched_ids
 
@@ -92,12 +99,18 @@ class TemporalSearcher:
         assert torch.is_tensor(self.fused_embs)
 
     def vectors_search(
-        self, v_queries, topk=5, queries_weights=None, return_first=False
+        self,
+        v_queries,
+        topk=5,
+        queries_weights=None,
+        match_first=False,
+        return_match_ids=True,
+        **kwargs
     ):
         # for each video, match each query with its associated frame
         # in a consecutive order
 
-        # return_first: the score of each frame is the maximum score
+        # match_first: the score of each frame is the maximum score
         # of all sequences of frames that start with that frame
         # if false then the maximum score of all sequences that end with
         # that frame
@@ -110,9 +123,6 @@ class TemporalSearcher:
 
         # normalize the query
         v_queries = torch.nn.functional.normalize(v_queries, dim=-1)
-
-        if return_first:
-            v_queries = torch.flip(v_queries, dims=0)
 
         if queries_weights is not None:
             queries_weights = torch.tensor(queries_weights).to(self.device)
@@ -127,25 +137,21 @@ class TemporalSearcher:
             # (seqlen, dim)
             vid_embs = self.fused_embs[_start : _end + 1]
 
-            if return_first:
-                vid_embs = torch.flip(vid_embs, dims=0)
-
             # (#queries, #frame)
-            pairwise_sim = np.exp(v_queries @ vid_embs.T)
+            pairwise_sim = torch.exp(v_queries @ vid_embs.T)
+
+            if queries_weights is not None:
+                pairwise_sim = pairwise_sim * queries_weights[:, None]
 
             # (#frame)
-            score, matched_ids = temporal_matching(pairwise_sim)
-
-            if return_first:
-                score = torch.flip(score, dims=0)
-
-                for i in range(len(matched_ids)):
-                    matched_ids[i] = [len(vid_embs) - j for j in matched_ids[i]]
+            score, matched_ids = temporal_matching(
+                pairwise_sim, match_first=match_first, return_match_ids=return_match_ids
+            )
 
             batch_ids = [i + current_index for i in range(len(score))]
 
-            for idx, sim in zip(batch_ids, score):
-                results.append((idx, sim))
+            for idx, sim, mids in zip(batch_ids, score, matched_ids):
+                results.append((idx, mids, sim))
 
             if len(results) > topk:
                 results = heapq.nlargest(topk, results, key=lambda x: x[-1])
@@ -153,14 +159,15 @@ class TemporalSearcher:
             current_index += len(score)
 
         query_results = []
-        for idx, dist in results:
+        for idx, matched_frames, dist in results:
             vid_name, frame_idx = self.db.get_info(idx)
 
             query_results.append(
                 {
-                    "score": dist,
+                    "score": dist.item(),
                     "keyframe_id": frame_idx.item(),
                     "video_name": vid_name,
+                    "matched_frames": matched_frames.tolist(),
                 }
             )
 

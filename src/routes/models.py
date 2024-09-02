@@ -1,5 +1,7 @@
 from pydantic import BaseModel, conlist
 from typing import List, Tuple, Dict, Literal
+from typing import Union
+
 
 class SearchResult(BaseModel):
     results: List[dict]
@@ -11,10 +13,23 @@ class SingleTextQuery(BaseModel):
     model: str = "vit-b32"
     language: str
 
+
 class MultiQuery(BaseModel):
     query: List[str]
     topk: int = 10
     model: str = "vit-b32"
+
+
+class TemporalQuery(BaseModel):
+    query: List[str]
+    topk: int = 10
+    model: str = "vit-b32"
+
+    # not required
+    queries_weights: Union[List[float], None] = None
+    match_first: bool = True
+    return_match_ids: bool = True
+
 
 # class Query_OCR(BaseModel):
 #     query: conlist(item_type=str, min_length=1, max_length=5)  # type: ignore

@@ -54,15 +54,10 @@ class FusedSearcher:
 
         self.batches = torch.chunk(fused_embs, self.num_sections)
 
-
-    def vectors_search(
-        self, v_queries, topk=5, queries_weights=None, return_first=False
-    ):
+    def vectors_search(self, v_queries, topk=5, queries_weights=None, **kwargs):
         # perform linear search
         # return topk instances with the minimum total
         # distance to all queries
-
-        # return_first: for compatibility with TemporalSearcher
 
         # v_queries should be a numpy array
         # and should not be normalized if feature_normalization is on

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from .models import SearchResult, MultiQuery
+from .models import SearchResult, TemporalQuery
 from searchers import Searchers
 
 router = APIRouter(prefix="/temporal_search")
@@ -21,9 +21,12 @@ def get_searcher(model, Searchers=Searchers):
 
 
 @router.post("/", response_model=SearchResult)
-def search_temporal(request: MultiQuery) -> SearchResult:
+def search_temporal(request: TemporalQuery) -> SearchResult:
     queries = request.query
     topk = request.topk
+
+    match_first = request.match_first
+    return_match_ids = request.return_match_ids
 
     _searcher = get_searcher(request.model)
 
