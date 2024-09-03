@@ -8,7 +8,7 @@ router = APIRouter(prefix="/search_ASR")
 
 @router.post("/", response_model=SearchResult)
 def search_ASR(query_requets: AsrQuery) -> SearchResult:
-
+    
     if "asr_searcher" not in Searchers.keys():
         raise HTTPException(status_code=500, detail="ASR search is not enabled on this server")
 

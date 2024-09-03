@@ -13,10 +13,13 @@ class OcrDB:
         database = []
         for vid in os.listdir(OCR_base_path):
             path_to_file = os.path.join(OCR_base_path, vid)
+   
+            vid_name = os.path.join(vid.split('_')[0] , vid[:-5])
+  
 
             with open(path_to_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-            database.append((vid, data))
+            database.append((vid_name, data))
         
         self.db = database
 

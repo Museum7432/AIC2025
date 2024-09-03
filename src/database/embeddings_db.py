@@ -76,6 +76,8 @@ class EmbeddingsDB:
 
         embs_relative_path = list_file_recursively(self.embs_base_path)
 
+    
+
         for embs_lp in embs_relative_path:
             if not embs_lp.endswith(".npy"):
                 raise ValueError(f"unrecognized embedding file extension {embs_path}")
@@ -97,8 +99,8 @@ class EmbeddingsDB:
                 self.embs_dim = video_embs.shape[-1]
             else:
                 assert (
-                    self.embs_dim == video_embs.shape[-1]
-                ), f"mismatch embedding dimension in {embs_path}"
+                        self.embs_dim == video_embs.shape[-1]
+                    ), f"mismatch embedding dimension in {embs_path}"
 
         self.fused_embs = np.vstack(frames_embs)
 

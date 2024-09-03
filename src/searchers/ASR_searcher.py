@@ -53,7 +53,7 @@ def search_in_db_video_fast(vid, data, query):  # tìm trong 1 video
             result.append(
                 {
                     "video_name": vid,
-                    "keyframe_id": check[1]["frames"],
+                    "keyframe_id": check[1]["id"],
                     "score": check[0],
                     "text": check[1]["text"],
                 }
@@ -92,7 +92,7 @@ def search_in_db_video_slow(vid, data, query):  # tìm trong 1 video
             result.append(
                 {
                     "video_name": vid,
-                    "keyframe_id": check[1]["frames"],
+                    "keyframe_id": check[1]["id"],
                     "score": check[0],
                     "text": check[1]["text"],
                 }
@@ -120,7 +120,7 @@ class AsrSearcher:
         self.asr_db = asr_db
 
     def search_fast(self, text, num_img):
-        return ASR_search_engine_fast(text, self.asr_db.db, num_img=num_img)
+        return ASR_search_engine_fast(text, self.asr_db.db, num_img)
 
     def search_slow(self, text, num_img):
-        return ASR_search_engine_slow(text, self.asr_db.db, num_img=num_img)
+        return ASR_search_engine_slow(text, self.asr_db.db, num_img)

@@ -17,6 +17,6 @@ def search_ObjectCount(request: ObjectCountingQuery) -> SearchResult:
             query, topk=topk, measure_method="l2_norm"
         )
     elif mode == "fast":
-        results = Searchers["objcount_searcher"].search_fast(query)
+        results = Searchers["objcount_searcher"].search_fast(query, topk=topk)
 
     return SearchResult(results=results)
