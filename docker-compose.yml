@@ -59,8 +59,8 @@ services:
       timeout: 10s
       retries: 50
 
-    ports:
-      - "9200:9200"
+    # ports:
+    #   - "9200:9200"
     ulimits:
       nofile:
         soft: 65536
