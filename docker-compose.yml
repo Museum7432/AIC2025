@@ -1,19 +1,29 @@
 services:
   backend-api:
     # tty: true
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+        restart: true
+
 
     environment:
-    # the .env file supersedes these variable
+      # the .env file supersedes these variable
       - APP_NAME=ELO@AIC Image Semantic Search
       - gpt_translate_model=gpt-4o-mini
-      - ocr_path=/data/text_extracted
+      - ocr_path=/data/OCR_results
       - object_counting_path=/data/Object_Counting_vector_np
       # empty string to deactivate
-      - asr_path=
+      - asr_path=data/asr_processed
       - blip2_embs_path=
       - clip_H_embs_path=
       - clip_bigG_embs_path=
-      - clip_B32_embs_path=/data/clip-features-vit-b32
+      - clip_B32_embs_path=
+
+      # read from the .env file if exist
+      - openai_api_key=${openai_api_key}
+
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
 
     build:
       context: .
@@ -22,21 +32,52 @@ services:
       - 8000:8000
 
     volumes:
-      - ./src:/src      
+      - ./src:/src
       - ./data:/data
 
       - ~/.cache/huggingface:/root/.cache/huggingface
       - ~/.cache/torch:/root/.cache/torch
       - ~/.cache/clip:/root/.cache/clip
 
-      # config file (contains the openai api key)
-      # - ./.env:/.env
-
     networks:
       - project_network
-    entrypoint: >
-      conda run --no-capture-output -n py311 python -u -m uvicorn src.main:app --host 0.0.0.0 --port 8000
 
+    # remove the reload flag on production
+    entrypoint: >
+      conda run --no-capture-output -n py311 python -u -m uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+
+  elasticsearch:
+    build:
+      context: ./elasticsearch_VN
+      args:
+        ES_VERSION: "8.7.0"
+    restart: on-failure
+
+    healthcheck:
+      test: curl -s http://elasticsearch:9200 >/dev/null || exit 1
+      interval: 10s
+      timeout: 10s
+      retries: 50
+
+    ports:
+      - "9200:9200"
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+      memlock:
+        hard: -1
+        soft: -1
+    environment:
+      ES_JAVA_OPTS: "-Xmx2g -Xms2g"
+      ELASTIC_USERNAME: "elastic"
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      bootstrap.memory_lock: "true"
+      discovery.type: "single-node"
+      xpack.security.enabled: "true"
+    networks:
+      - project_network
+  
   # frontend:
   #   image: aic_be:latest
   #   ports:

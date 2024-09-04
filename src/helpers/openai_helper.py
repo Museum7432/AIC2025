@@ -4,6 +4,8 @@ from openai import OpenAI
 client = None
 if settings.openai_api_key:
     client = OpenAI(api_key=settings.openai_api_key)
+else:
+    print("openai api key not provied, translation will be disabled")
 
 
 def gpt4_translate_vi2en(text):

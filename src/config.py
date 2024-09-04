@@ -17,7 +17,7 @@ class Settings(BaseSettings):
 
     object_counting_path: Union[str, None] = "data/Object_Counting_vector_np"
 
-    asr_path: Union[str, None] = "data/ASR_folder"
+    asr_path: Union[str, None] = "data/asr_processed"
 
     blip2_embs_path: Union[str, None] = "data/keyframes_embs_blip2"
 
@@ -30,6 +30,15 @@ class Settings(BaseSettings):
     clip_B32_embs_path: Union[str, None] = None
 
     device: str = "cpu"
+    
+    # docker container
+    elastic_endpoint: str = "http://elasticsearch:9200"
+    # if elastic_password is None, disable all features 
+    # that depend on it
+    # set up a .env with the sample .env_example
+    # TODO: use other type of authentication
+    elastic_username:str = "elastic"
+    elastic_password: Union[str, None] = None
 
 
 settings = Settings()

@@ -1,0 +1,3 @@
+[submodule "elasticsearch_VN"]
+	path = elasticsearch_VN
+	url = https://github.com/duydo/elasticsearch-analysis-vietnamese.git

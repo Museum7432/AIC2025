@@ -71,7 +71,7 @@ class ObjectCountDB:
                       
                         data_base[id_cls][num_obj_per_cls].add((vid_name, id_img))
                         
-        for i, instance in enumerate(data_base[0]): 
-            print(f'length of set {i}' , len(instance))
+        # for i, instance in enumerate(data_base[0]): 
+        #     print(f'length of set {i}' , len(instance))
 
         return data_base

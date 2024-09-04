@@ -4,6 +4,7 @@ from joblib import Parallel, delayed
 import pandas as pd
 
 from database import AsrDB
+import heapq
 
 
 # PATH_TO_MAP_KEYFRAMES_FOLDER="./map-keyframes/"
@@ -118,6 +119,30 @@ def ASR_search_engine_slow(
 class AsrSearcher:
     def __init__(self, asr_db: AsrDB):
         self.asr_db = asr_db
+
+        self.elastic_client = asr_db.elastic_client
+
+    def elastic_search(self, query, topk):
+        # TODO: implement topk
+        hits = self.elastic_client.search(
+            index="asr",
+            query={
+                "match": {"text": {"query": query, "fuzziness": "AUTO"}},
+            },
+            size=topk,
+        ).raw["hits"]["hits"]
+
+        results = [
+            {
+                "video_name": d["_source"]["vid_name"],
+                "keyframe_id": d["_source"]["frame_id"],
+                # "score": score,
+                "score": d["_score"],
+                "text": d["_source"]["text"],
+            }
+            for d in hits
+        ]
+        return results
 
     def search_fast(self, text, num_img):
         return ASR_search_engine_fast(text, self.asr_db.db, num_img)
