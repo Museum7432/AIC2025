@@ -40,6 +40,12 @@ class Settings(BaseSettings):
     elastic_username:str = "elastic"
     elastic_password: Union[str, None] = None
 
+    # remove the old index on load
+    # helpful for development
+    # should be disabled in production
+    # since create a new index is slow 
+    remove_old_index:bool=False
+
 
 settings = Settings()
 

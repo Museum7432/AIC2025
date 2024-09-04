@@ -50,7 +50,7 @@ def load_seacher():
 
     if settings.ocr_path:
         # ocr database
-        ocr_db = OcrDB(settings.ocr_path)
+        ocr_db = OcrDB(settings.ocr_path, remove_old_index=settings.remove_old_index)
         ocr_searcher = OcrSearcher(ocr_db)
 
         re["ocr_searcher"] = ocr_searcher
@@ -65,7 +65,7 @@ def load_seacher():
         print("object counting loaded!")
 
     if settings.asr_path:
-        asr_db = AsrDB(settings.asr_path)
+        asr_db = AsrDB(settings.asr_path, remove_old_index=settings.remove_old_index)
         asr_searcher = AsrSearcher(asr_db)
 
         re["asr_searcher"] = asr_searcher

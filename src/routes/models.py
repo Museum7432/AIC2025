@@ -53,13 +53,14 @@ class TemporalQuery(BaseModel):
 class AsrQuery(BaseModel):
     query: str
     topk: int = 10
-    mode: str = "fast"
+    mode: str = "elastic"
 
 
 # for OCR
 class OcrQuery(BaseModel):
     query: str
     topk: int = 10
+    mode: str = "elastic"
 
 
 # for object counting

@@ -5,6 +5,7 @@ import time
 from tqdm import tqdm
 from joblib import Parallel, delayed
 from database import OcrDB
+
 # Hàm kiểm tra từ gần giống query trong câu
 
 
@@ -36,7 +37,7 @@ def search_compare_similirity_word_load_fulldatabase_to_ram(
         for k, v in data.items():
             check = find_closest_match(query, v)
             if check is not None:
-           
+
                 results.append(
                     {
                         "video_name": vid,
@@ -54,7 +55,7 @@ def search_in_db_video(vid, data, query):  # tìm trong 1 video
     for k, v in data.items():
         check = find_closest_match(query, v)
         if check is not None:
-        
+
             result.append(
                 {"video_name": vid, "keyframe_id": int(k[:-4]), "score": check[0]}
             )
@@ -74,8 +75,31 @@ def search_in_db_v2(
 
 
 class OcrSearcher:
-    def __init__(self, ocr_db:OcrDB):
+    def __init__(self, ocr_db: OcrDB):
         self.ocr_db = ocr_db
+
+        self.elastic_client = ocr_db.elastic_client
+
+    def elastic_search(self, query, topk):
+        hits = self.elastic_client.search(
+            index="ocr",
+            query={
+                "match": {"text": {"query": query, "fuzziness": "AUTO"}},
+            },
+            size=topk,
+        ).raw["hits"]["hits"]
+
+        results = [
+            {
+                "video_name": d["_source"]["vid_name"],
+                "keyframe_id": d["_source"]["keyframe_id"],
+                # "score": score,
+                "score": d["_score"],
+                "text": d["_source"]["text"],
+            }
+            for d in hits
+        ]
+        return results
 
     def search(self, query, num_img):
         return search_in_db_v2(query, self.ocr_db.db, num_img)

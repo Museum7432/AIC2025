@@ -123,7 +123,6 @@ class AsrSearcher:
         self.elastic_client = asr_db.elastic_client
 
     def elastic_search(self, query, topk):
-        # TODO: implement topk
         hits = self.elastic_client.search(
             index="asr",
             query={

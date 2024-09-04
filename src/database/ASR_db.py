@@ -14,7 +14,8 @@ from elasticsearch import helpers
 
 
 class AsrDB:
-    def __init__(self, asr_base_path=""):
+    def __init__(self, asr_base_path="", remove_old_index=False):
+        self.remove_old_index = remove_old_index
 
         # self.db = self.load_asr(asr_base_path)
 
@@ -27,7 +28,13 @@ class AsrDB:
     def create_index(self, base_path):
         if self.elastic_client.indices.exists(index="asr"):
             print("ASR index has already exist")
-            return
+
+            if not self.remove_old_index:
+                return
+
+            print("delete old asr index")
+            self.elastic_client.indices.delete(index="asr", ignore=[400, 404])
+
         self.elastic_client.indices.create(index="asr", body=vietnamese_index_settings)
 
         asr_relative_path = list_file_recursively(base_path)

@@ -18,7 +18,7 @@ def search_ASR(query_requets: AsrQuery) -> SearchResult:
     topk = query_requets.topk
     mode = query_requets.mode
 
-    if mode == "new":
+    if mode == "elastic":
         results = Searchers["asr_searcher"].elastic_search(query=query, topk=topk)
     elif mode == "slow":
         results = Searchers["asr_searcher"].search_slow(text=query, num_img=topk)
