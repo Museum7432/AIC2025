@@ -95,7 +95,14 @@ class ObjectCountDB:
         self.elastic_client.indices.create(
             index="obj_count",
             body={
-                "settings": {"analysis": {"analyzer": "whitespace"}}
+                "settings": {
+                    "analysis": {"analyzer": "whitespace"},
+                    "similarity": {
+                        "default": {
+                            "type": "boolean"  # This specifies the use of TF-IDF
+                        }
+                    },
+                },
             },  # we should only split on whitespace
         )
 
