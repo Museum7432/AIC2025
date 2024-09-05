@@ -159,7 +159,7 @@ def load_seacher():
 
         re["clip_BigG_searcher"] = clip_BigG_searcher
         re["clip_BigG_fused_searcher"] = clip_BigG_fused_searcher
-        re["clip_temporal_fused_searcher"] = clip_temporal_fused_searcher
+        re["clip_BigG_temporal_searcher"] = clip_temporal_fused_searcher
 
         print("ViT-bigG-2B loaded!")
 

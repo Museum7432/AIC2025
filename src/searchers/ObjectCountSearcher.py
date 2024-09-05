@@ -7,7 +7,7 @@ def search_obj_count_engine_slow(
     query: str, db: list, topk: int = 10, measure_method: str = "l2_norm"
 ):
     # handle query
-    lst = query.split("#")
+    lst = query.split()
     # fmt: off
     class_names=['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 
         'truck', 'boat', 'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 
@@ -27,7 +27,7 @@ def search_obj_count_engine_slow(
         dic_img[key] = 0
     for num_cls in lst:
         num, cls = num_cls.split("-")
-        dic_img[cls] = int(num)
+        dic_img[cls.replace("_", " ")] = int(num)
     query_arr = np.array(list(dic_img.values()))
     indices = []
     for i, key in enumerate(dic_img):
@@ -72,7 +72,7 @@ def search_obj_count_engine_fast(
     db: list,
 ):
     # handle query
-    lst = query.split("#")
+    lst = query.split(" ")
 
     # fmt: off
     class_names=['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 
@@ -92,7 +92,7 @@ def search_obj_count_engine_fast(
     lst_set = []
     for num_cls in lst:
         num, cls = num_cls.split("-")
-        set_img_of_numobj_cls = db[class_dict[cls]][int(num)]
+        set_img_of_numobj_cls = db[class_dict[cls.replace("_", " ")]][int(num)]
         lst_set.append(set_img_of_numobj_cls)
 
     result = lst_set[0]
