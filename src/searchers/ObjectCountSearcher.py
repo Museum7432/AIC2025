@@ -7,7 +7,7 @@ def search_obj_count_engine_slow(
     query: str, db: list, topk: int = 10, measure_method: str = "l2_norm"
 ):
     # handle query
-    lst = query.split()
+    lst = query.split("#")
     # fmt: off
     class_names=['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 
         'truck', 'boat', 'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 
@@ -72,7 +72,7 @@ def search_obj_count_engine_fast(
     db: list,
 ):
     # handle query
-    lst = query.split()
+    lst = query.split("#")
 
     # fmt: off
     class_names=['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 

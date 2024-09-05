@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     clip_H_embs_path: Union[str, None] = "data/keyframes_embs_clip_H"
 
     clip_bigG_embs_path: Union[str, None] = "data/ViT-bigG-14-CLIPA-336-datacomp1b"
+    
+    clip_S400M_embs_path: Union[str, None] = "data/keyframes_embs_clip_S400M"
 
     # for testing
     # "data/keyframes_embs_clip_B32", "ViT-B-32", "openai"

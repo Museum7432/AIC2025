@@ -94,7 +94,7 @@ def load_seacher():
 
         print("BLIP2 loaded!")
     
-    if settings.clip_400M_embs_path:
+    if settings.clip_S400M_embs_path:
         # load the embeddings
         S400M_clip_db = EmbeddingsDB(settings.clip_S400M_embs_path)
 
