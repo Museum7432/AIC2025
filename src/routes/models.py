@@ -67,7 +67,7 @@ class OcrQuery(BaseModel):
 class ObjectCountingQuery(BaseModel):
     query: str
     topk: int = 10
-    mode: str = "slow"
+    mode: str = "elastic"
 
 
 class FrameNeighborsQuery(BaseModel):

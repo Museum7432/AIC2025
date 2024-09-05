@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
     ocr_path: Union[str, None] = "data/text_extracted"
 
-    object_counting_path: Union[str, None] = "data/Object_Counting_vector_np"
+    object_counting_path: Union[str, None] = "data/obj_cnt_data"
 
     asr_path: Union[str, None] = "data/asr_processed"
 
@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     elastic_password: Union[str, None] = None
 
     # remove the old index on load
-    # helpful for development
+    # useful for development
     # should be disabled in production
     # since create a new index is slow 
     remove_old_index:bool=False
