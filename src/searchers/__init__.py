@@ -47,6 +47,8 @@ def load_seacher():
         re["B32_temporal_searcher"] = B32_temporal_searcher
 
         print("clip B32 loaded!")
+        
+        
 
     if settings.ocr_path:
         # ocr database
@@ -91,6 +93,31 @@ def load_seacher():
         re["blip2_temporal_searcher"] = blip2_temporal_searcher
 
         print("BLIP2 loaded!")
+    
+    if settings.clip_400M_embs_path:
+        # load the embeddings
+        S400M_clip_db = EmbeddingsDB(settings.clip_S400M_embs_path)
+
+        # load the model
+        S400M_encoder = ClipEncoder("ViT-SO400M-14-SigLIP-384", "webli", device="cpu", jit =False)
+
+        # create the searcher
+        S400M_searcher = FaissSearcher(S400M_clip_db, S400M_encoder)
+
+        S400M_fused_searcher = UnifiedSearcher(
+            FusedSearcher(S400M_clip_db, S400M_encoder, batch_size=2048)
+        )
+
+        S400M_temporal_searcher = UnifiedSearcher(
+            TemporalSearcher(S400M_clip_db, S400M_encoder)
+        )
+
+        re["S400M_searcher"] = S400M_searcher
+        re["S400M_fused_searcher"] = S400M_fused_searcher
+        re["S400M_temporal_searcher"] = S400M_temporal_searcher
+
+        print("clip 400M loaded!")
+        
 
     if settings.clip_H_embs_path:
         clip_H_db = EmbeddingsDB(settings.clip_H_embs_path)
@@ -118,7 +145,7 @@ def load_seacher():
             settings.clip_bigG_embs_path
         )
 
-        clip_BigG_encoder = ClipEncoder("ViT-bigG-14-CLIPA-336", "datacomp1b", device="cpu")
+        clip_BigG_encoder = ClipEncoder("ViT-bigG-14", "laion2B-s39B-b160k", device="cpu")
 
         clip_BigG_searcher = FaissSearcher(clip_BigG_db, clip_BigG_encoder)
 
@@ -134,18 +161,18 @@ def load_seacher():
         re["clip_BigG_fused_searcher"] = clip_BigG_fused_searcher
         re["clip_temporal_fused_searcher"] = clip_temporal_fused_searcher
 
-        print("ViT-bigG-14-CLIPA-336 loaded!")
+        print("ViT-bigG-2B loaded!")
 
     return re
 
 
 def model_name_to_searcher(name):
     match name:
-        case "Blip2-ViTG":
-            return Searchers["blip2_searcher"]
+        case "Clip-400M":
+            return Searchers["S400M_searcher"]
         case "ViT 5b":
             return Searchers["clip_H_searcher"]
-        case "ViT-bigG-14":
+        case "ViT-bigG-2B":
             return Searchers["clip_BigG_searcher"]
         case "vit-b32":
             return Searchers["B32_searcher"]

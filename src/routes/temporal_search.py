@@ -8,11 +8,11 @@ router = APIRouter(prefix="/temporal_search")
 
 def get_searcher(model, Searchers=Searchers):
     match model:
-        case "Blip2-ViTG":
-            return Searchers["blip2_temporal_searcher"]
+        case "Clip-400M":
+            return Searchers["S400M_temporal_searcher"]
         case "ViT 5b":
             return Searchers["clip_H_temporal_searcher"]
-        case "ViT-bigG-14":
+        case "ViT-bigG-2B":
             return Searchers["clip_BigG_temporal_searcher"]
         case "vit-b32":
             return Searchers["B32_temporal_searcher"]

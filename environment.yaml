@@ -16,6 +16,7 @@ dependencies:
 # - faiss-gpu=1.8.0
 
 - open-clip-torch=2.26.1
+- timm=1.0.9
 - tqdm=4.66.5
 - numpy=1.26.4
 - pillow=10.4.0
