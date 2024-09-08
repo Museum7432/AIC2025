@@ -6,19 +6,19 @@ services:
         condition: service_healthy
         restart: true
 
-
     environment:
       # the .env file supersedes these variable
       - APP_NAME=ELO@AIC Image Semantic Search
       - gpt_translate_model=gpt-4o-mini
-      - ocr_path=/data/OCR_results
-      - object_counting_path=/data/obj_cnt_data
+      - ocr_path=/data/embeddings/OCR_results
+      - object_counting_path=/data/embeddings/obj_cnt_data
       # empty string to deactivate
-      - asr_path=data/asr_processed
+      - asr_path=/data/embeddings/asr_processed
       - blip2_embs_path=
-      - clip_H_embs_path=
-      - clip_bigG_embs_path=
+      - clip_H_embs_path=/data/embeddings/keyframes_embs_clip_H
+      - clip_bigG_embs_path=/data/embeddings/keyframes_embs_clip_BigG2B
       - clip_B32_embs_path=
+      - clip_S400M_embs_path=/data/embeddings/keyframes_embs_clip_S400M
 
       # read from the .env file if exist
       - openai_api_key=${openai_api_key}
@@ -43,8 +43,10 @@ services:
       - project_network
 
     # remove the reload flag on production
-    entrypoint: >
-      conda run --no-capture-output -n py311 python -u -m uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    # entrypoint: >
+    #   conda run --no-capture-output -n py311 python -u -m uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+
+    entrypoint: tail -f /dev/null
 
   elasticsearch:
     build:
@@ -61,8 +63,8 @@ services:
 
     # port should only be open for debugging
     # and be closed in production
-    # ports:
-    #   - "9200:9200"
+    ports:
+      - 9200:9200
     ulimits:
       nofile:
         soft: 65536
@@ -79,16 +81,6 @@ services:
       xpack.security.enabled: "true"
     networks:
       - project_network
-  
-  # frontend:
-  #   image: aic_be:latest
-  #   ports:
-  #     - 8501:8501
-  #   volumes:
-  #     - ./:/app/
-  #   depends_on:
-  #     - backend-api
-  #   networks:
-  #     - project_network
+
 networks:
   project_network:

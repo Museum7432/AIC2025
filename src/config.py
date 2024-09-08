@@ -13,19 +13,19 @@ class Settings(BaseSettings):
 
     gpt_translate_model: str = "gpt-4o-mini"
 
-    ocr_path: Union[str, None] = "data/text_extracted"
+    ocr_path: Union[str, None] = "data/embeddings/OCR_results"
 
-    object_counting_path: Union[str, None] = "data/obj_cnt_data"
+    object_counting_path: Union[str, None] = "data/embeddings/obj_cnt_data"
 
-    asr_path: Union[str, None] = "data/asr_processed"
+    asr_path: Union[str, None] = "data/embeddings/asr_processed"
 
-    blip2_embs_path: Union[str, None] = "data/keyframes_embs_blip2"
+    blip2_embs_path: Union[str, None] = "data/embeddings/keyframes_embs_blip2"
 
-    clip_H_embs_path: Union[str, None] = "data/keyframes_embs_clip_H"
+    clip_H_embs_path: Union[str, None] = "data/embeddings/keyframes_embs_clip_H"
 
-    clip_bigG_embs_path: Union[str, None] = "data/ViT-bigG-14-CLIPA-336-datacomp1b"
+    clip_bigG_embs_path: Union[str, None] = "data/embeddings/ViT-bigG-14-CLIPA-336-datacomp1b"
     
-    clip_S400M_embs_path: Union[str, None] = "data/keyframes_embs_clip_S400M"
+    clip_S400M_embs_path: Union[str, None] = "data/embeddings/keyframes_embs_clip_S400M"
 
     # for testing
     # "data/keyframes_embs_clip_B32", "ViT-B-32", "openai"
