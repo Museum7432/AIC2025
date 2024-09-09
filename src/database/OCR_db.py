@@ -69,7 +69,8 @@ class OcrDB:
 
     def load_ocr(self, OCR_base_path):
         database = []
-        for vid in os.listdir(OCR_base_path):
+        ocr_relative_path = list_file_recursively(OCR_base_path)
+        for vid in ocr_relative_path:
             path_to_file = os.path.join(OCR_base_path, vid)
 
             vid_name = os.path.join(vid.split("_")[0], vid[:-5])

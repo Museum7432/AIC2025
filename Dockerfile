@@ -7,6 +7,9 @@ COPY ./environment.yaml .
 
 # Building the environment
 RUN conda env create -f environment.yaml
+RUN conda uninstall -y -n py311 timm
+RUN conda install -y -n py311 open-clip-torch=2.26.1
+RUN conda install -y -n py311 timm=1.0.9
 # RUN conda env update -f environment.yaml
 
 RUN rm environment.yaml
