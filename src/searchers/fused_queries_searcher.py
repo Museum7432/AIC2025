@@ -19,16 +19,16 @@ def fuesd_queries_distance(frames_embs, queries_embs, queries_weights=None):
     # the final distance of each frame should be independent of other frames
 
     # (#queries, #frame)
-    pairwise_distance = torch.exp(queries_embs @ frames_embs.T)
+    pairwise_sim = torch.exp(queries_embs @ frames_embs.T)
 
     if queries_weights is not None:
-        pairwise_distance = pairwise_distance * queries_weights[:, None]
+        pairwise_sim = pairwise_sim * queries_weights[:, None]
 
     # (#frame)
-    # distance = torch.log(pairwise_distance.mean(0))
-    distance = pairwise_distance.mean(0)
+    # sim = torch.log(pairwise_sim.mean(0))
+    sim = pairwise_sim.mean(0)
 
-    return distance
+    return sim
 
 
 class FusedSearcher:
@@ -77,19 +77,30 @@ class FusedSearcher:
         results = []
 
         for batch in self.batches:
-            distances = (
-                fuesd_queries_distance(batch, v_queries, queries_weights).cpu().tolist()
-            )
+            score = fuesd_queries_distance(batch, v_queries, queries_weights).cpu()
+
+
+            # if len(results) > 0:
+            #     print(results[-1][-1], score.min())
+                # print(results[-1][-1]<= score.min())
+            if len(results) >= topk and results[-1][-1] >= score.max():
+                # if the highest sim in the batch is smaller than the lowest sim
+                # found
+                current_index += len(batch)
+                continue
+
+            score = score.tolist()
 
             batch_ids = [i + current_index for i in range(len(batch))]
 
-            for idx, dist in zip(batch_ids, distances):
+            current_index += len(batch)
+
+            for idx, dist in zip(batch_ids, score):
                 results.append((idx, dist))
 
             if len(results) > topk:
                 results = heapq.nlargest(topk, results, key=lambda x: x[-1])
-
-            current_index += len(batch)
+                results.sort(reverse=True, key=lambda x: x[-1])
 
         query_results = []
         for idx, dist in results:

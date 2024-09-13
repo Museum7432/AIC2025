@@ -75,11 +75,10 @@ def temporal_matching(pairwise_sim, match_first=False, return_match_ids=False):
 
     matched_ids = [a[::-1] for a in matched_ids]
 
-
     if match_first:
         matched_ids = np.array(matched_ids)
         matched_ids = num_frames - 1 - np.flip(matched_ids, axis=(0, 1))
-        matched_ids=matched_ids.tolist()
+        matched_ids = matched_ids.tolist()
 
     return score, matched_ids
 
@@ -144,6 +143,14 @@ class TemporalSearcher:
             if queries_weights is not None:
                 pairwise_sim = pairwise_sim * queries_weights[:, None]
 
+            naive_highest_score = pairwise_sim.max(-1).values.sum()
+
+            if len(results) >= topk and results[-1][-1] >= naive_highest_score:
+                # if the highest sim in the batch is smaller than the lowest sim
+                # found in the topk
+                current_index += len(vid_embs)
+                continue
+
             # (#frame)
             score, matched_ids = temporal_matching(
                 pairwise_sim, match_first=match_first, return_match_ids=return_match_ids
@@ -156,6 +163,7 @@ class TemporalSearcher:
 
             if len(results) > topk:
                 results = heapq.nlargest(topk, results, key=lambda x: x[-1])
+                results.sort(reverse=True, key=lambda x: x[-1])
 
             current_index += len(score)
 
