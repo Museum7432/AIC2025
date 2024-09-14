@@ -27,10 +27,15 @@ class Settings(BaseSettings):
 
     clip_S400M_embs_path: Union[str, None] = "data/keyframes_embs_clip_S400M"
 
+    color_code_path: Union[str, None] = "data/color_code_B32"
+    obj_loc_path: Union[str, None] = "data/object_location_data"
+
+
     # for testing
     # "data/keyframes_embs_clip_B32", "ViT-B-32", "openai"
     clip_B32_embs_path: Union[str, None] = None
 
+    # TODO: implement this
     device: str = "cpu"
 
     # docker container

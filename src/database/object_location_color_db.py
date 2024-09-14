@@ -4,6 +4,7 @@ from helpers import elastic_client
 from elasticsearch import helpers
 import os
 import numpy as np
+from utils import list_file_recursively
 
 # fmt: off
 # List of hex colors
@@ -69,7 +70,9 @@ def convert_color_code(color_code):
     # for loading from the file
     position_tag, color_class = color_code.split("#")
 
-    assert color_class in hex_color_pallete
+    color_class = "#" + color_class
+
+    assert color_class in class_names, color_class
     assert len(position_tag) == 2
 
     # a0
@@ -79,7 +82,7 @@ def convert_color_code(color_code):
 
     col = int(col)
 
-    class_idx = hex_color_pallete.index(color_class)
+    class_idx = class_names.index(color_class)
 
     return encode_pos(class_idx, row, col)
 
@@ -128,13 +131,17 @@ def box_cord2cells(
 
 
 class ObjectLocationDB:
-    def __init__(self, object_loc_base_path, remove_old_index=False):
+    def __init__(
+        self, object_loc_base_path, color_code_base_path, remove_old_index=False
+    ):
         self.elastic_client = elastic_client
 
         self.remove_old_index = remove_old_index
         # self.remove_old_index = True
 
         self.prefix_len = len(padded_class_names[0])
+
+        self.create_index(object_loc_base_path, color_code_base_path)
 
     def create_index(self, object_loc_base_path, color_code_base_path):
         if self.elastic_client.indices.exists(index="color_obj_loc"):
@@ -171,12 +178,15 @@ class ObjectLocationDB:
             documents = []
 
             obj_loc_lp = os.path.join(color_lp.replace(".txt", ""), "labels")
+            
+            color_code_path = os.path.join(color_code_base_path, color_lp)
 
-            assert os.path.isdir(obj_loc_lp), f"dir not found: {obj_loc_lp}"
+            object_loc_path = os.path.join(object_loc_base_path, obj_loc_lp)
+
+            assert os.path.isdir(object_loc_path), f"dir not found: {object_loc_path}"
 
             # load the color code
-
-            with open(color_lp, newline="") as file:
+            with open(color_code_path, newline="") as file:
                 lines = [line.rstrip() for line in file]
 
                 frames_color_code = [l.split() for l in lines]
@@ -189,16 +199,19 @@ class ObjectLocationDB:
 
             # load object location
 
-            nun_frames = len(os.listdir(obj_loc_lp))
+            nun_frames = len(frames_color_code)
 
             frames_obj_loc = []
 
             for frame_idx in range(nun_frames):
-                frame_path = os.path.join(obj_loc_lp, f"{str(frame_idx)}.txt")
+                frame_path = os.path.join(object_loc_path, f"{str(frame_idx)}.txt")
 
-                assert os.path.isfile(frame_path)
+                if not os.path.isfile(frame_path):
+                    frames_obj_loc.append("")
+                    continue
+                # assert os.path.isfile(frame_path), frame_path
 
-                # all encoded objects of a frame
+                # all encoded objects in a frame
                 objects = ""
 
                 with open(frame_path, newline="") as file:
@@ -212,17 +225,20 @@ class ObjectLocationDB:
                         box_cordinate = l[1:]
                         box_cordinate = [float(i) for i in box_cordinate]
 
-                        assert len(box_cordinate) == 0
+                        assert len(box_cordinate) == 4
 
                         # list of cells that fit the object
                         cells = box_cord2cells(box_cordinate)
 
                         for row, col in cells:
 
-                            objects = " ".join([objects, encode_pos(class_idx, row, col)])
+                            objects = " ".join(
+                                [objects, encode_pos(class_idx, row, col)]
+                            )
 
                 frames_obj_loc.append(objects)
 
+            assert len(frames_color_code) == len(frames_obj_loc)
             enocded_frames = [i + j for i, j in zip(frames_color_code, frames_obj_loc)]
 
             docs = [
@@ -242,5 +258,5 @@ class ObjectLocationDB:
         objects = ""
         for row, col in cells:
             objects = " ".join([objects, encode_pos(class_idx, row, col)])
-        
+
         return objects
