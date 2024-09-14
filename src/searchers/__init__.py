@@ -10,6 +10,8 @@ from .unified_searcher import UnifiedSearcher
 
 from .temporal_queries_searcher import TemporalSearcher
 
+from .obj_loc_color_searcher import ObjectLocationSearcher
+
 from database import *
 from encoders import ClipEncoder, BlipEncoder
 
@@ -47,8 +49,6 @@ def load_seacher():
         re["B32_temporal_searcher"] = B32_temporal_searcher
 
         print("clip B32 loaded!")
-        
-        
 
     if settings.ocr_path:
         # ocr database
@@ -73,6 +73,15 @@ def load_seacher():
         re["asr_searcher"] = asr_searcher
         print("ASR loaded!")
 
+    if settings.color_code_path:
+        objloc_db = ObjectLocationDB(settings.obj_loc_path, settings.color_code_path)
+
+        objloc_searcher = ObjectLocationSearcher(objloc_db)
+
+        re["obj_loc_searcher"] = objloc_searcher
+
+        print("obj location loaded!")
+
     if settings.blip2_embs_path:
         blip2_db = EmbeddingsDB(settings.blip2_embs_path)
 
@@ -93,13 +102,15 @@ def load_seacher():
         re["blip2_temporal_searcher"] = blip2_temporal_searcher
 
         print("BLIP2 loaded!")
-    
+
     if settings.clip_S400M_embs_path:
         # load the embeddings
         S400M_clip_db = EmbeddingsDB(settings.clip_S400M_embs_path)
 
         # load the model
-        S400M_encoder = ClipEncoder("ViT-SO400M-14-SigLIP-384", "webli", device="cpu", jit =False)
+        S400M_encoder = ClipEncoder(
+            "ViT-SO400M-14-SigLIP-384", "webli", device="cpu", jit=False
+        )
 
         # create the searcher
         S400M_searcher = FaissSearcher(S400M_clip_db, S400M_encoder)
@@ -117,7 +128,6 @@ def load_seacher():
         re["S400M_temporal_searcher"] = S400M_temporal_searcher
 
         print("clip 400M loaded!")
-        
 
     if settings.clip_H_embs_path:
         clip_H_db = EmbeddingsDB(settings.clip_H_embs_path)
@@ -141,11 +151,11 @@ def load_seacher():
         print(" ViT-H-14-378-quickgelu loaded!")
 
     if settings.clip_bigG_embs_path:
-        clip_BigG_db = EmbeddingsDB(
-            settings.clip_bigG_embs_path
-        )
+        clip_BigG_db = EmbeddingsDB(settings.clip_bigG_embs_path)
 
-        clip_BigG_encoder = ClipEncoder("ViT-bigG-14", "laion2B-s39B-b160k", device="cpu")
+        clip_BigG_encoder = ClipEncoder(
+            "ViT-bigG-14", "laion2B-s39B-b160k", device="cpu"
+        )
 
         clip_BigG_searcher = FaissSearcher(clip_BigG_db, clip_BigG_encoder)
 

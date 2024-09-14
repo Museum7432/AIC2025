@@ -123,11 +123,33 @@ class AsrSearcher:
         self.elastic_client = asr_db.elastic_client
 
     def elastic_search(self, query, topk):
+
+        es_query = {
+            "bool": {
+                "should": [
+                    {
+                        "match": {
+                            "text": {
+                                # perfect match should be returned first
+                                "query": query,
+                            }
+                        }
+                    },
+                    {
+                        "match": {
+                            "text": {"query": query, "fuzziness": "AUTO"},
+                        },
+                    },
+                ]
+            }
+        }
+
         hits = self.elastic_client.search(
             index="asr",
-            query={
-                "match": {"text": {"query": query, "fuzziness": "AUTO"}},
-            },
+            # query={
+            #     "match": {"text": {"query": query, "fuzziness": "AUTO"}},
+            # },
+            query=es_query,
             size=topk,
         ).raw["hits"]["hits"]
 

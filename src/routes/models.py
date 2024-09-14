@@ -75,3 +75,9 @@ class FrameNeighborsQuery(BaseModel):
     frame_idx: int
     model: str = "vit-b32"
     topk: int = 10
+
+class ObjectLocationQuery(BaseModel):
+    class_ids: List[int]
+    box_cords: List[List[float]]
+    topk: int = 10
+

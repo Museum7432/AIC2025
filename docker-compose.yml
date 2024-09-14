@@ -7,7 +7,7 @@ services:
         restart: true
 
     environment:
-      # the .env file supersedes these variable
+    
       - APP_NAME=ELO@AIC Image Semantic Search
       - gpt_translate_model=gpt-4o-mini
       - ocr_path=/data/embeddings/OCR_results
@@ -69,9 +69,11 @@ services:
       nofile:
         soft: 65536
         hard: 65536
-      memlock:
-        hard: -1
-        soft: -1
+    
+    # disabled for docker rootless
+    #   memlock:
+    #     hard: -1
+    #     soft: -1
     environment:
       ES_JAVA_OPTS: "-Xmx2g -Xms2g"
       ELASTIC_USERNAME: "elastic"

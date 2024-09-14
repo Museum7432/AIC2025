@@ -10,7 +10,7 @@ def list_file_recursively(base_dir, depth=None):
 
     relative_files_path = []
 
-    for name in os.listdir(base_dir):
+    for name in sorted(os.listdir(base_dir)):
         abs_path = os.path.join(base_dir, name)
         if os.path.isfile(abs_path):
             relative_files_path.append(name)
