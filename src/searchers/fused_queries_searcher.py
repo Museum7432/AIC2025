@@ -83,11 +83,11 @@ class FusedSearcher:
             # if len(results) > 0:
             #     print(results[-1][-1], score.min())
                 # print(results[-1][-1]<= score.min())
-            if len(results) >= topk and results[-1][-1] >= score.max():
-                # if the highest sim in the batch is smaller than the lowest sim
-                # found
-                current_index += len(batch)
-                continue
+            # if len(results) >= topk and results[-1][-1] >= score.max():
+            #     # if the highest sim in the batch is smaller than the lowest sim
+            #     # found
+            #     current_index += len(batch)
+            #     continue
 
             score = score.tolist()
 

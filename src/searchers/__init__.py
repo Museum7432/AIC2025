@@ -176,18 +176,49 @@ def load_seacher():
     return re
 
 
-def model_name_to_searcher(name):
+
+def model_name_map(name):
     match name:
         case "Clip-400M":
-            return Searchers["S400M_searcher"]
+            return "S400M"
         case "ViT 5b":
-            return Searchers["clip_H_searcher"]
+            return "clip_H"
         case "ViT-bigG-2B":
-            return Searchers["clip_BigG_searcher"]
+            return "clip_BigG"
         case "vit-b32":
-            return Searchers["B32_searcher"]
+            return "B32"
         case _:
             raise NotImplementedError()
+
+def get_faiss_searcher(name):
+    name = model_name_map(name)
+
+    return Searchers[f"{name}_searcher"]
+
+
+def get_fused_searcher(name):
+    name = model_name_map(name)
+    return Searchers[f"{name}_fused_searcher"]
+
+
+def get_temporal_searcher(name):
+    name = model_name_map(name)
+    return Searchers[f"{name}_temporal_searcher"]
+
+
+
+# def model_name_to_searcher(name):
+#     match name:
+#         case "Clip-400M":
+#             return Searchers["S400M_searcher"]
+#         case "ViT 5b":
+#             return Searchers["clip_H_searcher"]
+#         case "ViT-bigG-2B":
+#             return Searchers["clip_BigG_searcher"]
+#         case "vit-b32":
+#             return Searchers["B32_searcher"]
+#         case _:
+#             raise NotImplementedError()
 
 
 # will be loaded on app startup
