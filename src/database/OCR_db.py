@@ -36,7 +36,7 @@ class OcrDB:
         self.elastic_client.indices.create(index="ocr", body=vietnamese_index_settings)
 
         ocr_relative_path = list_file_recursively(base_path)
-
+    
         for ocr_file_lp in ocr_relative_path:
 
             if not ocr_file_lp.endswith(".json"):
@@ -69,11 +69,12 @@ class OcrDB:
 
     def load_ocr(self, OCR_base_path):
         database = []
+        
         ocr_relative_path = list_file_recursively(OCR_base_path)
         for vid in ocr_relative_path:
             path_to_file = os.path.join(OCR_base_path, vid)
 
-            vid_name = os.path.join(vid.split("_")[0], vid[:-5])
+            vid_name =  vid[:-5]
 
             with open(path_to_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
