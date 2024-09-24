@@ -192,18 +192,23 @@ class TemporalSearcher:
             vid_embs = self.fused_embs[_start : _end + 1]
 
             # (#queries, #frame)
+            # pairwise_sim = v_queries @ vid_embs.T
             pairwise_sim = torch.exp(v_queries @ vid_embs.T)
+            # Taylor expansion
+            # pairwise_sim = v_queries @ vid_embs.T
+            # pairwise_sim = 1 + pairwise_sim + pairwise_sim**2 / 2
+
 
             if queries_weights is not None:
                 pairwise_sim = pairwise_sim * queries_weights[:, None]
 
-            # naive_highest_score = pairwise_sim.max(-1).values.sum()
+            naive_highest_score = pairwise_sim.max(-1).values.sum()
 
-            # if len(results) >= topk and results[-1][-1] >= naive_highest_score:
-            #     # if the highest sim in the batch is smaller than the lowest sim
-            #     # found in the topk
-            #     current_index += len(vid_embs)
-            #     continue
+            if len(results) >= topk and results[-1][-1] >= naive_highest_score:
+                # if the highest sim in the batch is smaller than the lowest sim
+                # found in the topk
+                current_index += len(vid_embs)
+                continue
 
             # (#frame)
             # score, matched_ids = temporal_matching(
