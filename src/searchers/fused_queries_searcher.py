@@ -19,7 +19,13 @@ def fuesd_queries_distance(frames_embs, queries_embs, queries_weights=None):
     # the final distance of each frame should be independent of other frames
 
     # (#queries, #frame)
+    # TODO: test this
+    # pairwise_sim = -torch.exp(-queries_embs @ frames_embs.T)
+    # pairwise_sim = queries_embs @ frames_embs.T
     pairwise_sim = torch.exp(queries_embs @ frames_embs.T)
+
+    # pairwise_sim = queries_embs @ frames_embs.T
+    # pairwise_sim = 1 + pairwise_sim + pairwise_sim**2 / 2
 
     if queries_weights is not None:
         pairwise_sim = pairwise_sim * queries_weights[:, None]
@@ -80,14 +86,11 @@ class FusedSearcher:
             score = fuesd_queries_distance(batch, v_queries, queries_weights).cpu()
 
 
-            # if len(results) > 0:
-            #     print(results[-1][-1], score.min())
-                # print(results[-1][-1]<= score.min())
-            if len(results) >= topk and results[-1][-1] >= score.max():
-                # if the highest sim in the batch is smaller than the lowest sim
-                # found
-                current_index += len(batch)
-                continue
+            # if len(results) >= topk and results[-1][-1] >= score.max():
+            #     # if the highest sim in the batch is smaller than the lowest sim
+            #     # found
+            #     current_index += len(batch)
+            #     continue
 
             score = score.tolist()
 

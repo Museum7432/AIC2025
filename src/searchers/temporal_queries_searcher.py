@@ -83,6 +83,60 @@ def temporal_matching(pairwise_sim, match_first=False, return_match_ids=False):
     return score, matched_ids
 
 
+def temporal_matching_pytorch(pairwise_sim, match_first=False, return_match_ids=False):
+    # pairwise_sim: (#queries, #frame)
+    num_queries, num_frames = pairwise_sim.shape
+
+    # match_first is not supported since flip is quite slow in pytorch
+
+    score = None
+
+    traces = []
+
+    for i in range(num_queries):
+        if i == 0:
+            # the first query
+            score = pairwise_sim[0]
+
+        else:
+            
+            cummax_values, cummax_indices = torch.cummax(score, dim=0)
+
+            # cummax_indices = cumargmax(score)
+
+            # roll the cummax so that the same frame cannot be selected twice
+            cummax_indices = cummax_indices[:-1]
+
+            shifted_len = num_frames - len(cummax_indices)
+
+            # cummax_values = score[cummax_indices]
+            cummax_values = cummax_values[:-1]
+
+            score = cummax_values + pairwise_sim[i][shifted_len:]
+
+            if return_match_ids:
+                # save the best previous frame index
+                traces.append(
+                    [0] * (shifted_len) + (cummax_indices + shifted_len - 1).cpu().tolist()
+                )
+
+    shifted_len = num_frames - len(score)
+
+    score = torch.nn.functional.pad(score, pad=(shifted_len, 0), value=float("-Inf"))
+
+    if not return_match_ids:
+        return score, [[]] * len(score)
+
+    matched_ids = [[i] for i in range(num_frames)]
+
+    for t in traces[::-1]:
+        for i in range(len(matched_ids)):
+            matched_ids[i].append(t[matched_ids[i][-1]])
+
+    matched_ids = [a[::-1] for a in matched_ids]
+
+    return score.cpu().tolist(), matched_ids
+
 class TemporalSearcher:
     def __init__(
         self,
@@ -138,7 +192,12 @@ class TemporalSearcher:
             vid_embs = self.fused_embs[_start : _end + 1]
 
             # (#queries, #frame)
+            # pairwise_sim = v_queries @ vid_embs.T
             pairwise_sim = torch.exp(v_queries @ vid_embs.T)
+            # Taylor expansion
+            # pairwise_sim = v_queries @ vid_embs.T
+            # pairwise_sim = 1 + pairwise_sim + pairwise_sim**2 / 2
+
 
             if queries_weights is not None:
                 pairwise_sim = pairwise_sim * queries_weights[:, None]
@@ -152,10 +211,12 @@ class TemporalSearcher:
                 continue
 
             # (#frame)
-            score, matched_ids = temporal_matching(
-                pairwise_sim, match_first=match_first, return_match_ids=return_match_ids
+            # score, matched_ids = temporal_matching(
+            #     pairwise_sim, match_first=match_first, return_match_ids=return_match_ids
+            # )
+            score, matched_ids = temporal_matching_pytorch(
+                pairwise_sim, return_match_ids=return_match_ids
             )
-
             batch_ids = [i + current_index for i in range(len(score))]
 
             for idx, sim, mids in zip(batch_ids, score, matched_ids):
@@ -173,7 +234,7 @@ class TemporalSearcher:
 
             query_results.append(
                 {
-                    "score": dist.item(),
+                    "score": dist,
                     "keyframe_id": frame_idx.item(),
                     "video_name": vid_name,
                     "matched_frames": matched_frames,

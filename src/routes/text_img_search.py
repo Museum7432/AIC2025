@@ -3,7 +3,7 @@ import io
 import base64
 
 from .models import SingleTextQuery, SearchResult
-from searchers import Searchers, model_name_to_searcher
+from searchers import Searchers, get_faiss_searcher
 from helpers import gpt4_translate_vi2en
 
 router = APIRouter(prefix="/search")
@@ -24,7 +24,7 @@ def search(request: SingleTextQuery):
 
     model = request.model
 
-    _searcher = model_name_to_searcher(model)
+    _searcher = get_faiss_searcher(model)
 
     _searcher_method = _searcher.batch_search_by_text
 

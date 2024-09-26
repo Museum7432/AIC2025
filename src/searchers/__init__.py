@@ -20,35 +20,85 @@ from config import settings
 Searchers = {}
 
 
-def load_seacher():
+def load_model(
+    prefix_name="B32",
+    embs_path="data/keyframes_embs_clip_B32",
+    clip_model=True,
+    model_arch="ViT-B-32",
+    pretrain_name="openai",
+    device="cpu",
+    batch_size=2048,
+    jit=True,
+):
+    # load the embeddings
+    embs_db = EmbeddingsDB(embs_path)
+    # load the model
+    if clip_model:
+        encoder = ClipEncoder(model_arch, pretrain_name, device=device, jit=jit)
+    else:
+        encoder = BlipEncoder(model_arch, pretrain_name, device=device)
+    # create the searcher
+    faiss_searcher = FaissSearcher(embs_db, encoder)
 
+    fused_searcher = UnifiedSearcher(FusedSearcher(embs_db, encoder, batch_size=2048))
+    temporal_searcher = UnifiedSearcher(TemporalSearcher(embs_db, encoder))
+
+    print(f"{prefix_name} loaded!")
+    return {
+        f"{prefix_name}_faiss": faiss_searcher,
+        f"{prefix_name}_fused": fused_searcher,
+        f"{prefix_name}_temporal": temporal_searcher,
+    }
+
+
+def model_name_map(name):
+    match name:
+        case "Clip-400M":
+            return "S400M"
+        case "ViT 5b":
+            return "clip_H"
+        case "ViT-bigG-2B":
+            return "clip_BigG"
+        case "vit-b32":
+            return "B32"
+        case _:
+            raise NotImplementedError()
+
+
+def get_faiss_searcher(name):
+    name = model_name_map(name)
+
+    return Searchers[f"{name}_faiss"]
+
+
+def get_fused_searcher(name):
+    name = model_name_map(name)
+    return Searchers[f"{name}_fused"]
+
+
+def get_temporal_searcher(name):
+    name = model_name_map(name)
+    return Searchers[f"{name}_temporal"]
+
+
+def load_seacher():
     re = {}
 
     print("preparing searchers!")
 
     if settings.clip_B32_embs_path:
-        # load the embeddings
-        B32_clip_db = EmbeddingsDB(settings.clip_B32_embs_path)
-
-        # load the model
-        B32_encoder = ClipEncoder("ViT-B-32", "openai", device="cpu")
-
-        # create the searcher
-        B32_searcher = FaissSearcher(B32_clip_db, B32_encoder)
-
-        B32_fused_searcher = UnifiedSearcher(
-            FusedSearcher(B32_clip_db, B32_encoder, batch_size=2048)
+        re.update(
+            load_model(
+                prefix_name="B32",
+                embs_path=settings.clip_B32_embs_path,
+                clip_model=True,
+                model_arch="ViT-B-32",
+                pretrain_name="openai",
+                device="cpu",
+                batch_size=2048,
+                jit=True,
+            )
         )
-
-        B32_temporal_searcher = UnifiedSearcher(
-            TemporalSearcher(B32_clip_db, B32_encoder)
-        )
-
-        re["B32_searcher"] = B32_searcher
-        re["B32_fused_searcher"] = B32_fused_searcher
-        re["B32_temporal_searcher"] = B32_temporal_searcher
-
-        print("clip B32 loaded!")
 
     if settings.ocr_path:
         # ocr database
@@ -83,111 +133,61 @@ def load_seacher():
         print("obj location loaded!")
 
     if settings.blip2_embs_path:
-        blip2_db = EmbeddingsDB(settings.blip2_embs_path)
-
-        blip2_encoder = BlipEncoder("blip2_feature_extractor", "pretrain", device="cpu")
-
-        blip2_searcher = FaissSearcher(blip2_db, blip2_encoder)
-
-        blip2_fused_searcher = UnifiedSearcher(
-            FusedSearcher(blip2_db, blip2_encoder, batch_size=2048)
+        re.update(
+            load_model(
+                prefix_name="blip2",
+                embs_path=settings.blip2_embs_path,
+                clip_model=False,
+                model_arch="blip2_feature_extractor",
+                pretrain_name="pretrain",
+                device="cpu",
+                batch_size=2048,
+            )
         )
-
-        blip2_temporal_searcher = UnifiedSearcher(
-            TemporalSearcher(blip2_db, blip2_encoder)
-        )
-
-        re["blip2_searcher"] = blip2_searcher
-        re["blip2_fused_searcher"] = blip2_fused_searcher
-        re["blip2_temporal_searcher"] = blip2_temporal_searcher
-
-        print("BLIP2 loaded!")
 
     if settings.clip_S400M_embs_path:
-        # load the embeddings
-        S400M_clip_db = EmbeddingsDB(settings.clip_S400M_embs_path)
-
-        # load the model
-        S400M_encoder = ClipEncoder(
-            "ViT-SO400M-14-SigLIP-384", "webli", device="cpu", jit=False
+        re.update(
+            load_model(
+                prefix_name="S400M",
+                embs_path=settings.clip_S400M_embs_path,
+                clip_model=True,
+                model_arch="ViT-SO400M-14-SigLIP-384",
+                pretrain_name="webli",
+                device="cpu",
+                batch_size=2048,
+                jit=False,
+            )
         )
-
-        # create the searcher
-        S400M_searcher = FaissSearcher(S400M_clip_db, S400M_encoder)
-
-        S400M_fused_searcher = UnifiedSearcher(
-            FusedSearcher(S400M_clip_db, S400M_encoder, batch_size=2048)
-        )
-
-        S400M_temporal_searcher = UnifiedSearcher(
-            TemporalSearcher(S400M_clip_db, S400M_encoder)
-        )
-
-        re["S400M_searcher"] = S400M_searcher
-        re["S400M_fused_searcher"] = S400M_fused_searcher
-        re["S400M_temporal_searcher"] = S400M_temporal_searcher
-
-        print("clip 400M loaded!")
 
     if settings.clip_H_embs_path:
-        clip_H_db = EmbeddingsDB(settings.clip_H_embs_path)
-
-        clip_H_encoder = ClipEncoder("ViT-H-14-378-quickgelu", "dfn5b", device="cpu")
-
-        clip_H_searcher = FaissSearcher(clip_H_db, clip_H_encoder)
-
-        clip_H_fused_searcher = UnifiedSearcher(
-            FusedSearcher(clip_H_db, clip_H_encoder, batch_size=2048)
+        re.update(
+            load_model(
+                prefix_name="clip_H",
+                embs_path=settings.clip_H_embs_path,
+                clip_model=True,
+                model_arch="ViT-H-14-378-quickgelu",
+                pretrain_name="dfn5b",
+                device="cpu",
+                batch_size=2048,
+                jit=True,
+            )
         )
-
-        clip_H_temporal_searcher = UnifiedSearcher(
-            TemporalSearcher(clip_H_db, clip_H_encoder)
-        )
-
-        re["clip_H_searcher"] = clip_H_searcher
-        re["clip_H_fused_searcher"] = clip_H_fused_searcher
-        re["clip_H_temporal_searcher"] = clip_H_temporal_searcher
-
-        print(" ViT-H-14-378-quickgelu loaded!")
 
     if settings.clip_bigG_embs_path:
-        clip_BigG_db = EmbeddingsDB(settings.clip_bigG_embs_path)
-
-        clip_BigG_encoder = ClipEncoder(
-            "ViT-bigG-14", "laion2B-s39B-b160k", device="cpu"
+        re.update(
+            load_model(
+                prefix_name="clip_BigG",
+                embs_path=settings.clip_bigG_embs_path,
+                clip_model=True,
+                model_arch="ViT-bigG-14",
+                pretrain_name="laion2B-s39B-b160k",
+                device="cpu",
+                batch_size=2048,
+                jit=True,
+            )
         )
-
-        clip_BigG_searcher = FaissSearcher(clip_BigG_db, clip_BigG_encoder)
-
-        clip_BigG_fused_searcher = UnifiedSearcher(
-            FusedSearcher(clip_BigG_db, clip_BigG_encoder, batch_size=2048)
-        )
-
-        clip_temporal_fused_searcher = UnifiedSearcher(
-            TemporalSearcher(clip_BigG_db, clip_BigG_encoder)
-        )
-
-        re["clip_BigG_searcher"] = clip_BigG_searcher
-        re["clip_BigG_fused_searcher"] = clip_BigG_fused_searcher
-        re["clip_BigG_temporal_searcher"] = clip_temporal_fused_searcher
-
-        print("ViT-bigG-2B loaded!")
 
     return re
-
-
-def model_name_to_searcher(name):
-    match name:
-        case "Clip-400M":
-            return Searchers["S400M_searcher"]
-        case "ViT 5b":
-            return Searchers["clip_H_searcher"]
-        case "ViT-bigG-2B":
-            return Searchers["clip_BigG_searcher"]
-        case "vit-b32":
-            return Searchers["B32_searcher"]
-        case _:
-            raise NotImplementedError()
 
 
 # will be loaded on app startup

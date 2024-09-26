@@ -25,6 +25,7 @@ from routes import (
     fuse_route,
     temporal_route,
     obj_loc_route,
+    translate_route
 )
 
 from config import settings
@@ -57,6 +58,7 @@ app.include_router(frame_nei_route)
 app.include_router(fuse_route)
 app.include_router(temporal_route)
 app.include_router(obj_loc_route)
+app.include_router(translate_route)
 
 
 if __name__ == "__main__":

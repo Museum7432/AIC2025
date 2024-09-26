@@ -30,23 +30,12 @@ class TemporalQuery(BaseModel):
     match_first: bool = True
     return_match_ids: bool = True
 
+class TranslationQuery(BaseModel):
+    texts: List[str]
+    # only vi2en is available
 
-# class Query_OCR(BaseModel):
-#     query: conlist(item_type=str, min_length=1, max_length=5)  # type: ignore
-#     topk: int = 10
-
-
-# class Query_ObjectCount(BaseModel):
-#     query: conlist(item_type=str, min_length=1, max_length=5)  # type: ignore
-#     topk: int = 10
-#     mode: str = "slow"
-
-
-# class Query_image(BaseModel):
-#     video_name: str
-#     idx: int
-#     model_name: str
-#     topk: int = 10
+class TranslationResult(BaseModel):
+    texts: List[str]
 
 
 # for ASR
