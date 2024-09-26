@@ -8,7 +8,7 @@ services:
 
 
     environment:
-      # the .env file supersedes these variable
+    
       - APP_NAME=ELO@AIC Image Semantic Search
       - gpt_translate_model=gpt-4o-mini
       - ocr_path=/data/OCR_results
@@ -18,7 +18,8 @@ services:
       - blip2_embs_path=
       - clip_H_embs_path=
       - clip_bigG_embs_path=
-      - clip_B32_embs_path=
+      - clip_B32_embs_path=data/keyframes_embs_clip_B32
+      - clip_S400M_embs_path=
 
       # read from the .env file if exist
       - openai_api_key=${openai_api_key}
@@ -61,15 +62,17 @@ services:
 
     # port should only be open for debugging
     # and be closed in production
-    # ports:
-    #   - "9200:9200"
+    ports:
+      - "9200:9200"
     ulimits:
       nofile:
         soft: 65536
         hard: 65536
-      memlock:
-        hard: -1
-        soft: -1
+    
+    # disabled for docker rootless
+    #   memlock:
+    #     hard: -1
+    #     soft: -1
     environment:
       ES_JAVA_OPTS: "-Xmx2g -Xms2g"
       ELASTIC_USERNAME: "elastic"

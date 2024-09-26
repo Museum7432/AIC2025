@@ -5,7 +5,7 @@ from typing import Union
 # https://fastapi.tiangolo.com/advanced/settings/
 class Settings(BaseSettings):
     # ignored if .env file is not set
-    model_config = SettingsConfigDict(env_file=".env")
+    model_config = SettingsConfigDict(env_file=".env", extra='ignore')
 
     app_name: str = "ELO@AIC Image Semantic Search"
 
@@ -24,29 +24,34 @@ class Settings(BaseSettings):
     clip_H_embs_path: Union[str, None] = "data/keyframes_embs_clip_H"
 
     clip_bigG_embs_path: Union[str, None] = "data/ViT-bigG-14-CLIPA-336-datacomp1b"
-    
+
     clip_S400M_embs_path: Union[str, None] = "data/keyframes_embs_clip_S400M"
+
+    color_code_path: Union[str, None] = "data/color_code_B32"
+    obj_loc_path: Union[str, None] = "data/object_location_data"
+
 
     # for testing
     # "data/keyframes_embs_clip_B32", "ViT-B-32", "openai"
     clip_B32_embs_path: Union[str, None] = None
 
+    # TODO: implement this
     device: str = "cpu"
-    
+
     # docker container
     elastic_endpoint: str = "http://elasticsearch:9200"
-    # if elastic_password is None, disable all features 
+    # if elastic_password is None, disable all features
     # that depend on it
     # set up a .env with the sample .env_example
     # TODO: use other type of authentication
-    elastic_username:str = "elastic"
+    elastic_username: str = "elastic"
     elastic_password: Union[str, None] = None
 
     # remove the old index on load
     # useful for development
     # should be disabled in production
-    # since create a new index is slow 
-    remove_old_index:bool=False
+    # since create a new index is slow
+    remove_old_index: bool = False
 
 
 settings = Settings()

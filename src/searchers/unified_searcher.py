@@ -10,6 +10,7 @@ from PIL import Image
 
 from database import EmbeddingsDB
 from .fused_queries_searcher import FusedSearcher
+from .temporal_queries_searcher import TemporalSearcher
 
 
 def convert_frame_query(query, embs_db: EmbeddingsDB):
@@ -50,7 +51,7 @@ def get_query_type(query):
 
 
 class UnifiedSearcher:
-    def __init__(self, searcher: FusedSearcher):
+    def __init__(self, searcher: Union[FusedSearcher, TemporalSearcher]):
         # accepting texts, imgs, frames_id as input
         # performs search with the input searcher
 
