@@ -56,9 +56,10 @@ services:
 
     healthcheck:
       test: curl -s http://elasticsearch:9200 >/dev/null || exit 1
-      interval: 10s
+      interval: 5s
       timeout: 10s
       retries: 50
+      start_period: 15s
 
     # port should only be open for debugging
     # and be closed in production

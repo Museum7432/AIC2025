@@ -18,6 +18,7 @@ class MultiQuery(BaseModel):
     query: List[str]
     topk: int = 10
     model: str = "vit-b32"
+    metric: str = "exp_dot" # 'dot' or 'exp_dot'
 
 
 class TemporalQuery(BaseModel):
@@ -25,10 +26,11 @@ class TemporalQuery(BaseModel):
     topk: int = 10
     model: str = "vit-b32"
 
+    metric: str = "exp_dot" # 'dot' or 'exp_dot'
     # not required
     queries_weights: Union[List[float], None] = None
-    match_first: bool = True
-    return_match_ids: bool = True
+    # match_first: bool = True
+    # return_match_ids: bool = True
 
 class TranslationQuery(BaseModel):
     texts: List[str]

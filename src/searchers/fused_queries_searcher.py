@@ -10,22 +10,18 @@ import heapq
 
 from database import EmbeddingsDB
 from encoders import ClipEncoder, BlipEncoder
+from utils import compute_similarity, get_similarity_func_id
+import time
 
-
-def fuesd_queries_distance(frames_embs, queries_embs, queries_weights=None):
+# TODO: fix this
+# @torch.jit.script
+def fuesd_queries_distance(frames_embs, queries_embs, queries_weights=None, metric_id=16):
     # frames_embs (#frames, #dims)
     # queries_embs (#queries, #dims)
 
     # the final distance of each frame should be independent of other frames
 
-    # (#queries, #frame)
-    # TODO: test this
-    # pairwise_sim = -torch.exp(-queries_embs @ frames_embs.T)
-    # pairwise_sim = queries_embs @ frames_embs.T
-    pairwise_sim = torch.exp(queries_embs @ frames_embs.T)
-
-    # pairwise_sim = queries_embs @ frames_embs.T
-    # pairwise_sim = 1 + pairwise_sim + pairwise_sim**2 / 2
+    pairwise_sim = compute_similarity(queries_embs, frames_embs, metric_id=metric_id)
 
     if queries_weights is not None:
         pairwise_sim = pairwise_sim * queries_weights[:, None]
@@ -58,15 +54,26 @@ class FusedSearcher:
 
         self.num_sections = len(fused_embs) // batch_size + 1
 
-        self.batches = torch.chunk(fused_embs, self.num_sections)
+        # self.batches = torch.chunk(fused_embs, self.num_sections)
 
-    def vectors_search(self, v_queries, topk=5, queries_weights=None, **kwargs):
+        current_index = 0
+        batches = []
+        for chunk in torch.chunk(fused_embs, self.num_sections):
+            batches.append((chunk, [i + current_index for i in range(len(chunk))]))
+
+            current_index += len(chunk)
+
+        self.batches = batches
+
+    def vectors_search(self, v_queries, topk=5, queries_weights=None, metric_type="exp_dot", **kwargs):
         # perform linear search
         # return topk instances with the minimum total
         # distance to all queries
 
         # v_queries should be a numpy array
         # and should not be normalized if feature_normalization is on
+        start_time = time.time()
+        metric_id = get_similarity_func_id(metric_type)
 
         # to tensor
         # (#queries, dim)
@@ -78,25 +85,15 @@ class FusedSearcher:
         if queries_weights is not None:
             queries_weights = torch.tensor(queries_weights).to(self.device)
 
-        current_index = 0
-
         results = []
 
-        for batch in self.batches:
-            score = fuesd_queries_distance(batch, v_queries, queries_weights).cpu()
+        for batch, batch_ids in self.batches:
+            score = fuesd_queries_distance(batch, v_queries, queries_weights, metric_id).cpu()
 
-
-            # if len(results) >= topk and results[-1][-1] >= score.max():
-            #     # if the highest sim in the batch is smaller than the lowest sim
-            #     # found
-            #     current_index += len(batch)
-            #     continue
-
+            # if the highest score within the batch is smaller than the lowest score in result
+            if len(results) >= topk and score.max() < results[-1][-1]:
+                continue
             score = score.tolist()
-
-            batch_ids = [i + current_index for i in range(len(batch))]
-
-            current_index += len(batch)
 
             for idx, dist in zip(batch_ids, score):
                 results.append((idx, dist))
@@ -104,6 +101,7 @@ class FusedSearcher:
             if len(results) > topk:
                 results = heapq.nlargest(topk, results, key=lambda x: x[-1])
                 results.sort(reverse=True, key=lambda x: x[-1])
+
 
         query_results = []
         for idx, dist in results:
@@ -116,6 +114,8 @@ class FusedSearcher:
                     "video_name": vid_name,
                 }
             )
+        end_time = time.time()
+        print(f"fused search Runtime: {end_time - start_time} seconds")
 
         return query_results
 
