@@ -26,11 +26,10 @@ def search_temporal(request: TemporalQuery) -> SearchResult:
     queries = request.query
     topk = request.topk
 
-    match_first = request.match_first
-    return_match_ids = request.return_match_ids
+    metric_type = request.metric
 
     _searcher = get_temporal_searcher(request.model)
 
-    results = _searcher.search(queries, topk, match_first=match_first, return_match_ids=return_match_ids)
+    results = _searcher.search(queries, topk, metric_type=metric_type)
 
     return SearchResult(results=results)

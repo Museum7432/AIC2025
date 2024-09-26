@@ -119,7 +119,7 @@ class UnifiedSearcher:
             for q, w, t in zip(queries, queries_weights, queries_type)
         ]
 
-        if "queries_weights" not in kwargs or kwargs["queries_weights"] is None:
+        if ("queries_weights" not in kwargs or kwargs["queries_weights"] is None) and len(list(set(queries_weights))) != 1:
             kwargs["queries_weights"] = queries_weights
 
         return self.searcher.vectors_search(
