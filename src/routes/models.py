@@ -5,6 +5,8 @@ from typing import Union
 
 class SearchResult(BaseModel):
     results: List[dict]
+    translated_query: Union[List[str], None] = None
+
 
 
 class SingleTextQuery(BaseModel):
@@ -19,12 +21,14 @@ class MultiQuery(BaseModel):
     topk: int = 10
     model: str = "vit-b32"
     metric: str = "exp_dot" # 'dot' or 'exp_dot'
+    language: str = "en"
 
 
 class TemporalQuery(BaseModel):
     query: List[str]
     topk: int = 10
     model: str = "vit-b32"
+    language: str = "en"
 
     metric: str = "exp_dot" # 'dot' or 'exp_dot'
     # not required
