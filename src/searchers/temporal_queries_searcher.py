@@ -1,6 +1,8 @@
 from typing import Union, List, Dict
 
 import torch
+import torch.nn.functional as F
+
 import faiss
 
 import numpy as np
@@ -13,11 +15,11 @@ from encoders import ClipEncoder, BlipEncoder
 from utils import compute_similarity, get_similarity_func_id
 import time
 
+from functools import partial
+
 
 @torch.jit.script
-def temporal_matching_pytorch(
-    queries: torch.Tensor, frames: torch.Tensor, metric_id: int = 16
-):
+def temporal_matching(queries: torch.Tensor, frames: torch.Tensor, metric_id: int = 16):
     """
     match queries to frames within the videos
     metric_id of 16 is dot product
@@ -74,6 +76,85 @@ def temporal_matching_pytorch(
     return score, steps
 
 
+@torch.jit.script
+def temporal_matching_kernel(
+    queries: torch.Tensor,
+    frames: torch.Tensor,
+    metric_id: int = 16,
+    max_frame_dist: int = 100,
+    min_frame_dist: int = 1,
+):
+    """
+    similar to temporal_matching but a lot slower (4 times slower)
+    max_frame_dist: maximum distance in indice between two consecutive selected frame
+    min_frame_dist: min distance in indice between two selected frame
+    """
+
+    # (#queries, #frame)
+    pairwise_sim = compute_similarity(queries, frames, metric_id=metric_id)
+
+    num_queries, num_frames = pairwise_sim.shape
+
+    # match_first is not supported since flip is quite slow in pytorch
+
+    score = pairwise_sim[0]
+
+    traces = torch.zeros(
+        (num_queries - 1, num_frames), device=pairwise_sim.device, dtype=torch.int
+    )
+
+    # score will be shifted min_frame_dist to the right
+    # every loop
+    shifted_len = 0
+
+    temp = torch.ones(max_frame_dist - 1, device=pairwise_sim.device) * float("-Inf")
+
+    for i in range(1, num_queries):
+
+        # pad the score before convolution
+        # score = F.pad(score, pad=(max_frame_dist-1, 0), value=float("-Inf"))
+        score = torch.concat((temp, score))
+
+        cummax_values, cummax_indices = F.max_pool1d(
+            score.reshape((1, 1, -1)),
+            kernel_size=max_frame_dist,
+            stride=1,
+            return_indices=True,
+        )
+
+        cummax_values = cummax_values.reshape(-1)
+
+        # remove the padding
+        cummax_indices = cummax_indices.reshape(-1) - (max_frame_dist - 1)
+
+        # roll the cummax so that the same frame cannot be selected twice
+        cummax_indices = cummax_indices[:-min_frame_dist]
+
+        shifted_len += min_frame_dist
+
+        cummax_values = cummax_values[:-min_frame_dist]
+
+        score = cummax_values + pairwise_sim[i][shifted_len:]
+
+        # save the best previous frame index
+        traces[i - 1][shifted_len:] = cummax_indices + shifted_len - min_frame_dist
+
+    score = torch.nn.functional.pad(score, pad=(shifted_len, 0), value=float("-Inf"))
+
+    # the indices of the last queries
+    start_index = torch.arange(num_frames, device=pairwise_sim.device, dtype=torch.int)
+
+    steps = [start_index]
+
+    for idx in range(num_queries - 2, -1, -1):
+        t = traces[idx]
+        steps.insert(0, t[steps[0]])
+
+    steps = torch.vstack(steps).T
+    # we should ignore the first num_queries - 1 rows of the steps
+    return score, steps
+
+
 class TemporalSearcher:
     def __init__(
         self,
@@ -97,7 +178,14 @@ class TemporalSearcher:
             )
 
     def vectors_search(
-        self, v_queries, topk=5, queries_weights=None, metric_type="exp_dot", **kwargs
+        self,
+        v_queries,
+        topk=5,
+        queries_weights=None,
+        metric_type: str = "exp_dot",
+        max_frame_dist: int = -1,
+        min_frame_dist: int = 1,
+        **kwargs,
     ):
         # for each video, match each query with its associated frame
         # in a consecutive order
@@ -129,9 +217,18 @@ class TemporalSearcher:
             # frames_ids: (seqlen)
 
             # (#frame)
-            score, matched_ids = temporal_matching_pytorch(
-                v_queries, vid_embs, metric_id=metric_id
-            )
+            if max_frame_dist == -1 and min_frame_dist == 1:
+                score, matched_ids = temporal_matching(
+                    v_queries, vid_embs, metric_id=metric_id
+                )
+            else:
+                score, matched_ids = temporal_matching_kernel(
+                    v_queries,
+                    vid_embs,
+                    metric_id=metric_id,
+                    max_frame_dist=max_frame_dist,
+                    min_frame_dist=min_frame_dist,
+                )
 
             # if the highest score within the batch is smaller than the lowest score in result
             if len(results) >= topk and score.max() < results[-1][-1]:

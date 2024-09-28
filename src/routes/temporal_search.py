@@ -17,6 +17,9 @@ def search_temporal(request: TemporalQuery) -> SearchResult:
     language = request.language
     metric_type = request.metric
 
+    max_frame_dist = request.max_frame_dist
+    min_frame_dist = request.min_frame_dist
+
     if request.language == "Vie":
         for i, q in enumerate(queries):
             if not (q.startswith("+") or q.startswith("-") or len(q) == 0):
@@ -24,9 +27,15 @@ def search_temporal(request: TemporalQuery) -> SearchResult:
 
     _searcher = get_temporal_searcher(request.model)
 
-    results = _searcher.search(queries, topk, metric_type=metric_type)
+    results = _searcher.search(
+        queries,
+        topk,
+        metric_type=metric_type,
+        max_frame_dist=max_frame_dist,
+        min_frame_dist=min_frame_dist,
+    )
 
     if request.language == "Vie":
         return SearchResult(results=results, translated_query=queries)
-    
+
     return SearchResult(results=results)
