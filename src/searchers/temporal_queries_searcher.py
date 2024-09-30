@@ -34,9 +34,11 @@ def temporal_matching(queries: torch.Tensor, frames: torch.Tensor, metric_id: in
 
     score = pairwise_sim[0]
 
-    traces = torch.zeros(
-        (num_queries - 1, num_frames), device=pairwise_sim.device, dtype=torch.int
-    )
+    # traces = torch.zeros(
+    #     (num_queries - 1, num_frames), device=pairwise_sim.device, dtype=torch.int
+    # )
+
+    traces = []
 
     # score will be shifted 1 to the right
     # every loop
@@ -45,20 +47,17 @@ def temporal_matching(queries: torch.Tensor, frames: torch.Tensor, metric_id: in
     for i in range(1, num_queries):
         cummax_values, cummax_indices = torch.cummax(score, dim=0)
 
-        # cummax_indices = cumargmax(score)
         # roll the cummax so that the same frame cannot be selected twice
         cummax_indices = cummax_indices[:-1]
-
-        # shifted_len = num_frames - len(cummax_indices)
-        shifted_len += 1
-
-        # cummax_values = score[cummax_indices]
         cummax_values = cummax_values[:-1]
 
-        score = cummax_values + pairwise_sim[i][shifted_len:]
+        score = cummax_values + pairwise_sim[i][shifted_len + 1:]
 
         # save the best previous frame index
-        traces[i - 1][shifted_len:] = cummax_indices + shifted_len - 1
+        # the trace should be padded with shifted_len at the start
+        traces.append(cummax_indices + shifted_len)
+
+        shifted_len += 1
 
     score = torch.nn.functional.pad(score, pad=(shifted_len, 0), value=float("-Inf"))
 
@@ -69,7 +68,8 @@ def temporal_matching(queries: torch.Tensor, frames: torch.Tensor, metric_id: in
 
     for idx in range(num_queries - 2, -1, -1):
         t = traces[idx]
-        steps.insert(0, t[steps[0]])
+        pad_len = num_frames - len(t)
+        steps.insert(0, t[steps[0] - pad_len])
 
     steps = torch.vstack(steps).T
     # we should ignore the first num_queries - 1 rows of the steps
@@ -99,9 +99,7 @@ def temporal_matching_kernel(
 
     score = pairwise_sim[0]
 
-    traces = torch.zeros(
-        (num_queries - 1, num_frames), device=pairwise_sim.device, dtype=torch.int
-    )
+    traces = []
 
     # score will be shifted min_frame_dist to the right
     # every loop
@@ -129,15 +127,14 @@ def temporal_matching_kernel(
 
         # roll the cummax so that the same frame cannot be selected twice
         cummax_indices = cummax_indices[:-min_frame_dist]
-
-        shifted_len += min_frame_dist
-
         cummax_values = cummax_values[:-min_frame_dist]
 
-        score = cummax_values + pairwise_sim[i][shifted_len:]
+        score = cummax_values + pairwise_sim[i][shifted_len + min_frame_dist:]
 
         # save the best previous frame index
-        traces[i - 1][shifted_len:] = cummax_indices + shifted_len - min_frame_dist
+        traces.append(cummax_indices + shifted_len)
+        
+        shifted_len += min_frame_dist
 
     score = torch.nn.functional.pad(score, pad=(shifted_len, 0), value=float("-Inf"))
 
@@ -148,7 +145,8 @@ def temporal_matching_kernel(
 
     for idx in range(num_queries - 2, -1, -1):
         t = traces[idx]
-        steps.insert(0, t[steps[0]])
+        pad_len = num_frames - len(t)
+        steps.insert(0, t[steps[0] - pad_len])
 
     steps = torch.vstack(steps).T
     # we should ignore the first num_queries - 1 rows of the steps
@@ -229,10 +227,11 @@ class TemporalSearcher:
                     max_frame_dist=max_frame_dist,
                     min_frame_dist=min_frame_dist,
                 )
-
+                
             # if the highest score within the batch is smaller than the lowest score in result
             if len(results) >= topk and score.max() < results[-1][-1]:
                 continue
+            
 
             score = score.cpu().tolist()
             matched_ids = matched_ids.cpu().tolist()

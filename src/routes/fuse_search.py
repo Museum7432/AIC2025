@@ -20,7 +20,7 @@ def search_fuse(request: MultiQuery) -> SearchResult:
             if not (q.startswith("+") or q.startswith("-") or len(q) == 0):
                 queries[i] = gpt4_translate_vi2en(q)
 
-    if len(queries) == 1:
+    if len(queries) == 1 and not (queries[0].startswith("+") or queries[0].startswith("-")):
         _searcher = get_faiss_searcher(request.model)
 
         _searcher_method = _searcher.batch_search_by_text

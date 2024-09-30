@@ -35,8 +35,8 @@ class TemporalQuery(BaseModel):
 
     # avoid using max_frame_dist and min_frame_dist as the kernel
     # version of temporal_matching is 4 times slower
-    max_frame_dist: int = -1
-    min_frame_dist: int = 1
+    max_frame_dist: int = -1 # -1: disable
+    min_frame_dist: int = 1 # 1: disable
 
 
 class TranslationQuery(BaseModel):
