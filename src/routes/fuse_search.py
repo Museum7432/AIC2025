@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 
 from .models import SearchResult, MultiQuery
 from searchers import Searchers, get_fused_searcher, get_faiss_searcher
-from helpers import gpt4_translate_vi2en
+from helpers import gpt4_translate_vi2en, gpt4_split_query
 
 router = APIRouter(prefix="/fuse_search")
 
@@ -15,10 +15,16 @@ def search_fuse(request: MultiQuery) -> SearchResult:
     language = request.language
     metric_type = request.metric
 
+    if request.gpt_split:
+        assert len(queries) == 1
+
     if request.language == "Vie":
         for i, q in enumerate(queries):
             if not (q.startswith("+") or q.startswith("-") or len(q) == 0):
                 queries[i] = gpt4_translate_vi2en(q)
+
+    if request.gpt_split:
+        queries = gpt4_split_query(queries[0], mode="static")
 
     if len(queries) == 1 and not (queries[0].startswith("+") or queries[0].startswith("-")):
         _searcher = get_faiss_searcher(request.model)
@@ -30,7 +36,4 @@ def search_fuse(request: MultiQuery) -> SearchResult:
         _searcher = get_fused_searcher(request.model)
         results = _searcher.search(queries, topk, metric_type=metric_type)
     
-    if request.language == "Vie":
-        return SearchResult(results=results, translated_query=queries)
-    
-    return SearchResult(results=results)
+    return SearchResult(results=results, query=queries)

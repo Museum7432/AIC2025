@@ -4,7 +4,8 @@ from .models import SearchResult, TemporalQuery
 
 from searchers import Searchers, get_temporal_searcher
 
-from helpers import gpt4_translate_vi2en
+from helpers import gpt4_translate_vi2en, gpt4_split_query
+
 
 router = APIRouter(prefix="/temporal_search")
 
@@ -20,10 +21,17 @@ def search_temporal(request: TemporalQuery) -> SearchResult:
     max_frame_dist = request.max_frame_dist
     min_frame_dist = request.min_frame_dist
 
+
+    if request.gpt_split:
+        assert len(queries) == 1
+
     if request.language == "Vie":
         for i, q in enumerate(queries):
             if not (q.startswith("+") or q.startswith("-") or len(q) == 0):
                 queries[i] = gpt4_translate_vi2en(q)
+
+    if request.gpt_split:
+        queries = gpt4_split_query(queries[0], mode="video")
 
     _searcher = get_temporal_searcher(request.model)
 
@@ -35,7 +43,4 @@ def search_temporal(request: TemporalQuery) -> SearchResult:
         min_frame_dist=min_frame_dist,
     )
 
-    if request.language == "Vie":
-        return SearchResult(results=results, translated_query=queries)
-
-    return SearchResult(results=results)
+    return SearchResult(results=results, query=queries)

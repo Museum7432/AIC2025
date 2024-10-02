@@ -5,7 +5,7 @@ from typing import Union
 
 class SearchResult(BaseModel):
     results: List[dict]
-    translated_query: Union[List[str], None] = None
+    query: Union[List[str], None] = None
 
 
 class SingleTextQuery(BaseModel):
@@ -22,6 +22,9 @@ class MultiQuery(BaseModel):
     metric: str = "exp_dot"  # 'dot' or 'exp_dot'
     language: str = "en"
 
+    # if True then the first query will be splitted
+    gpt_split: bool = False
+
 
 class TemporalQuery(BaseModel):
     query: List[str]
@@ -37,6 +40,8 @@ class TemporalQuery(BaseModel):
     # version of temporal_matching is 4 times slower
     max_frame_dist: int = -1 # -1: disable
     min_frame_dist: int = 1 # 1: disable
+
+    gpt_split: bool = False
 
 
 class TranslationQuery(BaseModel):
