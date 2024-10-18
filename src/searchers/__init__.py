@@ -94,7 +94,7 @@ def load_seacher():
                 clip_model=True,
                 model_arch="ViT-B-32",
                 pretrain_name="openai",
-                device="cpu",
+                device=settings.device,
                 batch_size=2048,
                 jit=True,
             )
@@ -140,7 +140,7 @@ def load_seacher():
                 clip_model=False,
                 model_arch="blip2_feature_extractor",
                 pretrain_name="pretrain",
-                device="cpu",
+                device=settings.device,
                 batch_size=2048,
             )
         )
@@ -153,7 +153,7 @@ def load_seacher():
                 clip_model=True,
                 model_arch="ViT-SO400M-14-SigLIP-384",
                 pretrain_name="webli",
-                device="cpu",
+                device=settings.device,
                 batch_size=2048,
                 jit=False,
             )
@@ -167,7 +167,7 @@ def load_seacher():
                 clip_model=True,
                 model_arch="ViT-H-14-378-quickgelu",
                 pretrain_name="dfn5b",
-                device="cpu",
+                device=settings.device,
                 batch_size=2048,
                 jit=True,
             )
@@ -181,7 +181,7 @@ def load_seacher():
                 clip_model=True,
                 model_arch="ViT-bigG-14",
                 pretrain_name="laion2B-s39B-b160k",
-                device="cpu",
+                device=settings.device,
                 batch_size=2048,
                 jit=True,
             )
