@@ -36,15 +36,23 @@ def remove_numeric_prefix(s):
 
 
 def gpt4_split_query(query, mode="static"):
-    assert mode in ["static", "video"]
+    assert mode in ["static", "static_vn", "video", "video_vn"]
 
     if mode == "static":
+        model = "gpt-4o-mini"
         sys_prompt = """You are a text processing assistant. Your task is to take a description of an image and split it into multiple smaller independent and descriptive queries suitable for the OpenAI CLIP model. Each query should be an accurate paraphrase of a specific aspect of the original text and must be adequate on its own without adding unnecessary details while enhancing clarity and detail. Do not add new information that was not in the original text. The same details can be repeated when needed. The location of each object whould be relative to other objects. Remove information about the setting or event of the scene. Do not make assumption about the setting or event. Each query should start with \"a photo of\". Return one query if you cannot split it."""
-    else:
+    elif mode == "video":
+        model = "gpt-4o-mini"
         sys_prompt = """You are a text processing assistant. Your task is to take a description of what happen in a video and generate multiple smaller independent queries of static image/keyframe suitable for the OpenAI CLIP model. Each query should be an accurate desciption of a event in that video and must be adequate on its own without adding unnecessary details while enhancing clarity and detail. Do not add new information that was not in the original text. The same details can be repeated. The location of each object whould be relative to other objects. Remove information about the setting or event of the scene. Do not make assumption about the setting or event. Each query should start with \"a photo of\". those queries must happen in a temporal order and two queries cannot descibe the same event."""
+    elif mode == "static_vn":
+        model = "gpt-4o"
+        sys_prompt = """You are a text processing assistant. Your task is to take a description of an image in Vietnamese and split it into multiple smaller independent and descriptive queries in english suitable for the OpenAI CLIP model. Each query should be an accurate paraphrase of a specific aspect of the original text and must be adequate on its own without adding unnecessary details while enhancing clarity and detail. Do not add new information that was not in the original text. The same details can be repeated when needed. The location of each object whould be relative to other objects. Remove information about the setting or event of the scene. Do not make assumption about the setting or event. Each query should start with \"a photo of\". Return one query if you cannot split it."""
+    else:
+        model = "gpt-4o"
+        sys_prompt = """You are a text processing assistant. Your task is to take a description of what happen in a video and generate multiple smaller independent queries in english of static image/keyframe suitable for the OpenAI CLIP model. Each query should be an accurate desciption of a event in that video and must be adequate on its own without adding unnecessary details while enhancing clarity and detail. Do not add new information that was not in the original text. The same details can be repeated. The location of each object whould be relative to other objects. Remove information about the setting or event of the scene. Do not make assumption about the setting or event. Each query should start with \"a photo of\". those queries must happen in a temporal order and two queries cannot descibe the same event."""
 
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model=model,
         messages=[
             {
                 "role": "system",

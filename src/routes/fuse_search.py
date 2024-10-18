@@ -18,13 +18,16 @@ def search_fuse(request: MultiQuery) -> SearchResult:
     if request.gpt_split:
         assert len(queries) == 1
 
-    if request.language == "Vie":
+        mode = "static"
+        if request.language == "Vie":
+            mode = "static_vn"
+        
+        queries = gpt4_split_query(queries[0], mode=mode)
+
+    elif request.language == "Vie":
         for i, q in enumerate(queries):
             if not (q.startswith("+") or q.startswith("-") or len(q) == 0):
                 queries[i] = gpt4_translate_vi2en(q)
-
-    if request.gpt_split:
-        queries = gpt4_split_query(queries[0], mode="static")
 
     if len(queries) == 1 and not (queries[0].startswith("+") or queries[0].startswith("-")):
         _searcher = get_faiss_searcher(request.model)

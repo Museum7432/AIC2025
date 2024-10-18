@@ -24,14 +24,16 @@ def search_temporal(request: TemporalQuery) -> SearchResult:
 
     if request.gpt_split:
         assert len(queries) == 1
+        mode = "static"
+        if request.language == "Vie":
+            mode = "static_vn"
+        
+        queries = gpt4_split_query(queries[0], mode=mode)
 
-    if request.language == "Vie":
+    elif request.language == "Vie":
         for i, q in enumerate(queries):
             if not (q.startswith("+") or q.startswith("-") or len(q) == 0):
                 queries[i] = gpt4_translate_vi2en(q)
-
-    if request.gpt_split:
-        queries = gpt4_split_query(queries[0], mode="video")
 
     _searcher = get_temporal_searcher(request.model)
 
