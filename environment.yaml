@@ -1,4 +1,4 @@
-name: py311
+name: py311_t
 channels:
 - pytorch
 - conda-forge
@@ -7,9 +7,9 @@ dependencies:
 - pip=24.2
 - gdown=5.2.0
 
-- pytorch=2.3.0
-- torchaudio=2.3.0
-- torchvision=0.18.0
+- pytorch=2.5.0
+- torchaudio=2.5.0
+- torchvision=0.20.0
 - cpuonly=2.0
 
 - faiss-cpu=1.8.0
@@ -26,8 +26,15 @@ dependencies:
 - pydantic-settings=2.4.0
 - fuzzywuzzy=0.18.0
 - joblib=1.4.2
-- openai=1.42.0
+- openai
+# - openblas
+- openmp 
+- cmake
 
 - pip:
   - salesforce-lavis==1.0.2
   - elasticsearch==8.15.0
+  - numpy==1.26.4
+  - timm==1.0.9
+  - git+https://github.com/Museum7432/ftsearch.git
+

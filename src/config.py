@@ -13,22 +13,32 @@ class Settings(BaseSettings):
 
     gpt_translate_model: str = "gpt-4o-mini"
 
-    ocr_path: Union[str, None] = "data/embeddings/OCR_results"
+    # data/embeddings/OCR_results
+    ocr_path: Union[str, None] = ""
 
-    object_counting_path: Union[str, None] = "data/embeddings/obj_cnt_data"
+    # data/embeddings/obj_cnt_data
+    object_counting_path: Union[str, None] = ""
 
-    asr_path: Union[str, None] = "data/embeddings/asr_processed"
+    # data/embeddings/asr_processed
+    asr_path: Union[str, None] = ""
 
-    blip2_embs_path: Union[str, None] = "data/embeddings/keyframes_embs_blip2"
+    # data/embeddings/keyframes_embs_blip2
+    blip2_embs_path: Union[str, None] = ""
 
-    clip_H_embs_path: Union[str, None] = "data/embeddings/keyframes_embs_clip_H"
+    # data/embeddings/keyframes_embs_clip_H
+    clip_H_embs_path: Union[str, None] = ""
 
-    clip_bigG_embs_path: Union[str, None] = "data/embeddings/ViT-bigG-14-CLIPA-336-datacomp1b"
+    # data/embeddings/ViT-bigG-14-CLIPA-336-datacomp1b
+    clip_bigG_embs_path: Union[str, None] = ""
     
-    clip_S400M_embs_path: Union[str, None] = "data/embeddings/keyframes_embs_clip_S400M"
+    # data/embeddings/keyframes_embs_clip_S400M
+    clip_S400M_embs_path: Union[str, None] = ""
 
-    color_code_path: Union[str, None] = "data/color_code_B32"
-    obj_loc_path: Union[str, None] = "data/object_location_data"
+    # data/color_code_B32
+    color_code_path: Union[str, None] = ""
+
+    # data/object_location_data
+    obj_loc_path: Union[str, None] = ""
 
 
     # for testing

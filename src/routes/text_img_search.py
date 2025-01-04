@@ -3,7 +3,7 @@ import io
 import base64
 
 from .models import SingleTextQuery, SearchResult
-from searchers import Searchers, get_faiss_searcher
+from searchers import Searchers, get_ft_searcher
 from helpers import gpt4_translate_vi2en
 
 router = APIRouter(prefix="/search")
@@ -24,17 +24,18 @@ def search(request: SingleTextQuery):
 
     model = request.model
 
-    _searcher = get_faiss_searcher(model)
+    _searcher = get_ft_searcher(model)
 
-    _searcher_method = _searcher.batch_search_by_text
+    _searcher_method = _searcher.search_by_texts
 
 
     if query.startswith("data:image/"):
 
         query = Image.open(io.BytesIO(base64.b64decode(query.split(",")[1])))
 
-        _searcher_method = _searcher.batch_search_by_image
+        _searcher_method = _searcher.search_by_images
 
     result = _searcher_method([query], topk)[0]
+
 
     return SearchResult(results=result)

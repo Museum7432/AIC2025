@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 
 from .models import SearchResult, TemporalQuery
 
-from searchers import Searchers, get_temporal_searcher
+from searchers import Searchers, get_ft_searcher
 
 from helpers import gpt4_translate_vi2en, gpt4_split_query
 
@@ -16,18 +16,16 @@ def search_temporal(request: TemporalQuery) -> SearchResult:
     topk = request.topk
 
     language = request.language
-    metric_type = request.metric
 
-    max_frame_dist = request.max_frame_dist
+    discount_rate = request.discount_rate
     min_frame_dist = request.min_frame_dist
-
 
     if request.gpt_split:
         assert len(queries) == 1
         mode = "static"
         if request.language == "Vie":
             mode = "static_vn"
-        
+
         queries = gpt4_split_query(queries[0], mode=mode)
 
     elif request.language == "Vie":
@@ -35,14 +33,13 @@ def search_temporal(request: TemporalQuery) -> SearchResult:
             if not (q.startswith("+") or q.startswith("-") or len(q) == 0):
                 queries[i] = gpt4_translate_vi2en(q)
 
-    _searcher = get_temporal_searcher(request.model)
+    _searcher = get_ft_searcher(request.model)
 
-    results = _searcher.search(
+    results = _searcher.temporal_search_by_texts(
         queries,
         topk,
-        metric_type=metric_type,
-        max_frame_dist=max_frame_dist,
-        min_frame_dist=min_frame_dist,
+        min_item_dist=min_frame_dist,
+        discount_rate=discount_rate,
     )
 
     return SearchResult(results=results, query=queries)
