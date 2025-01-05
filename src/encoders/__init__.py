@@ -1,5 +1,5 @@
 from .clip_encoder import ClipEncoder
-from .blip_encoder import BlipEncoder
+# from .blip_encoder import BlipEncoder
 
 # from collections import OrderedDict
 

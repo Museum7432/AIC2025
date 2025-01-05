@@ -9,12 +9,12 @@ from PIL import Image
 import heapq
 
 from database import FTdb
-from encoders import ClipEncoder, BlipEncoder
+from encoders import ClipEncoder
 import time
 
 
 class FTSearcher:
-    def __init__(self, embs_db: FTdb, encoder: Union[ClipEncoder, BlipEncoder]):
+    def __init__(self, embs_db: FTdb, encoder: ClipEncoder):
         self.db = embs_db
         self.encoder = encoder
 

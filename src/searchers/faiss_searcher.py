@@ -8,13 +8,13 @@ import numpy as np
 from PIL import Image
 
 from database import EmbeddingsDB
-from encoders import ClipEncoder, BlipEncoder
+from encoders import ClipEncoder
 
 from utils import normalized_np
 
 
 class FaissSearcher:
-    def __init__(self, embs_db: EmbeddingsDB, encoder: Union[ClipEncoder, BlipEncoder]):
+    def __init__(self, embs_db: EmbeddingsDB, encoder: ClipEncoder):
         self.db = embs_db
         self.encoder = encoder
 

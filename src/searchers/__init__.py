@@ -13,7 +13,7 @@ from .temporal_queries_searcher import TemporalSearcher
 from .obj_loc_color_searcher import ObjectLocationSearcher
 
 from database import *
-from encoders import ClipEncoder, BlipEncoder
+from encoders import ClipEncoder
 
 from .ft_searcher import FTSearcher
 
@@ -38,7 +38,7 @@ def load_model(
     if clip_model:
         encoder = ClipEncoder(model_arch, pretrain_name, device=device, jit=jit)
     else:
-        encoder = BlipEncoder(model_arch, pretrain_name, device=device)
+        raise RuntimeError("Blip model have been removed")
     # create the searcher
     faiss_searcher = FaissSearcher(embs_db, encoder)
 
@@ -68,8 +68,8 @@ def load_model_FT(
     if clip_model:
         encoder = ClipEncoder(model_arch, pretrain_name, device=device, jit=jit)
     else:
-        encoder = BlipEncoder(model_arch, pretrain_name, device=device)
-    
+        raise RuntimeError("Blip model have been removed")
+
     # create the searcher
     ft_searcher = FTSearcher(embs_db, encoder)
 
