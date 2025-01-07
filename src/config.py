@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     asr_path: Union[str, None] = "data/embeddings/asr_processed"
 
     blip2_embs_path: Union[str, None] = "data/embeddings/keyframes_embs_blip2"
+    
+    clip_Med_embs_path: Union[str, None] = "data/embeddings/keyframes_embs_clip_Med"
 
     clip_H_embs_path: Union[str, None] = "data/embeddings/keyframes_embs_clip_H"
 

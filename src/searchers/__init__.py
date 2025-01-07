@@ -61,6 +61,8 @@ def model_name_map(name):
             return "clip_BigG"
         case "vit-b32":
             return "B32"
+        case "vit-Med":
+            return "clip_Med"
         case _:
             raise NotImplementedError()
 
@@ -181,6 +183,20 @@ def load_seacher():
                 clip_model=True,
                 model_arch="ViT-bigG-14",
                 pretrain_name="laion2B-s39B-b160k",
+                device=settings.device,
+                batch_size=2048,
+                jit=True,
+            )
+        )
+    
+    if settings.clip_Med_embs_path:
+        re.update(
+            load_model(
+                prefix_name="clip_Med",
+                embs_path=settings.clip_Med_embs_path,
+                clip_model=True,
+                model_arch="hf-hub:luhuitong/CLIP-ViT-L-14-448px-MedICaT-ROCO",
+                pretrain_name="",
                 device=settings.device,
                 batch_size=2048,
                 jit=True,
