@@ -68,7 +68,9 @@ class ObjectCountingQuery(BaseModel):
 
 
 class FrameNeighborsQuery(BaseModel):
-    raw_frame_idx: int
+    video_name: str
+    frame_idx: int
+    
     model: str = "vit-b32"
     topk: int = 10
 

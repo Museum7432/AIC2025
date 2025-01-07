@@ -12,7 +12,7 @@ def search_ASR(request: FrameNeighborsQuery) -> SearchResult:
     _searcher = get_ft_searcher(request.model)
 
     results = _searcher.search_by_indexed_image(
-        vec_idx=request.raw_frame_idx, topk=request.topk
+        vid_name=request.video_name, frame_idx=request.frame_idx, topk=request.topk
     )
 
     return SearchResult(results=results)

@@ -25,7 +25,6 @@ class FTSearcher:
 
         sims, ids = self.db.db.search(v_queries, topk)
 
-
         sims = sims.tolist()
         ids = ids.tolist()
 
@@ -47,7 +46,6 @@ class FTSearcher:
                     {
                         "score": s,
                         "keyframe_id": frame_idx,
-                        "raw_keyframe_id": re,
                         "video_name": vid_name,
                     }
                 )
@@ -77,7 +75,6 @@ class FTSearcher:
                     "score": s,
                     "video_name": vid_name,
                     "matched_frames": [i - info["start_idx"] for i in matched_frames],
-                    "raw_matched_frames": matched_frames,
                 }
             )
 
@@ -119,7 +116,8 @@ class FTSearcher:
             discount_rate=discount_rate,
         )
 
-    def search_by_indexed_image(self, vec_idx, topk=5):
-        v_queries = self.db.db.get_vec(vec_idx)[None, :]
+    def search_by_indexed_image(self, vid_name, frame_idx, topk=5):
+        # v_queries = self.db.db.get_vec(vec_idx)[None, :]
+        v_queries = self.db.get_frame_embs(vid_name, frame_idx)[None, :]
 
         return self.vectors_search(v_queries, topk=topk)[0]

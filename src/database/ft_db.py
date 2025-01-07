@@ -17,6 +17,8 @@ class FTdb:
 
         self.embs_dim = None
 
+        self.vid_name2seq_id = {}
+
         embs_relative_path = list_file_recursively(embs_base_path)
 
         for embs_lp in tqdm(embs_relative_path):
@@ -43,9 +45,23 @@ class FTdb:
 
             self.db.add_seq(video_embs, video_name)
 
+            seq_id = self.db.num_seqs() - 1
+
+            self.vid_name2seq_id[video_name] = seq_id
+
     def _init_db(self):
         if self.db is None:
             self.db = FTSearch(self.embs_dim)
 
     def get_info(self, vec_idx):
         return self.db.get_info(vec_idx)
+    
+    def get_frame_embs(self, vid_name, frame_idx):
+        seq_id = self.vid_name2seq_id[vid_name]
+
+        start_idx = self.db.get_seq_info(seq_id)["start_idx"]
+
+        vec_idx = start_idx + frame_idx
+
+        return self.db.get_vec(vec_idx)
+
