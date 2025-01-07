@@ -1,2 +1,2 @@
-from .openai_helper import gpt4_translate_vi2en, gpt4_split_query
+from .openai_helper import gpt4_translate_vi2en, gpt4_split_query, gpt4_translate_uni2en
 from .elastic_helper import elastic_client, vietnamese_index_settings

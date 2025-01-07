@@ -92,7 +92,7 @@ def model_name_map(name):
         case "vit-Med":
             return "clip_Med"
         case _:
-            raise NotImplementedError()
+            return name
 
 
 def get_faiss_searcher(name):
@@ -152,7 +152,7 @@ def load_seacher():
     if settings.v3c_embs_path:
         v3c_embdb = FTdb(settings.v3c_embs_path)
 
-        re["clip_H_ft"] = FTSearcher(v3c_embdb, encoder)
+        re["V3C_ft"] = FTSearcher(v3c_embdb, encoder)
         print(f"{settings.clip_Med_embs_path} load")
     
     return re
