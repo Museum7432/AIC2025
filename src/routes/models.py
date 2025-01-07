@@ -19,7 +19,6 @@ class MultiQuery(BaseModel):
     query: List[str]
     topk: int = 10
     model: str = "vit-b32"
-    metric: str = "exp_dot"  # 'dot' or 'exp_dot'
     language: str = "en"
 
     # if True then the first query will be splitted
@@ -32,14 +31,8 @@ class TemporalQuery(BaseModel):
     model: str = "vit-b32"
     language: str = "en"
 
-    metric: str = "exp_dot"  # 'dot' or 'exp_dot'
-    # not required
-    queries_weights: Union[List[float], None] = None
-
-    # avoid using max_frame_dist and min_frame_dist as the kernel
-    # version of temporal_matching is 4 times slower
-    max_frame_dist: int = -1 # -1: disable
-    min_frame_dist: int = 1 # 1: disable
+    min_frame_dist: int = 1
+    discount_rate: float = 1
 
     gpt_split: bool = False
 
@@ -77,6 +70,7 @@ class ObjectCountingQuery(BaseModel):
 class FrameNeighborsQuery(BaseModel):
     video_name: str
     frame_idx: int
+    
     model: str = "vit-b32"
     topk: int = 10
 

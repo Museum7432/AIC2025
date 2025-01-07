@@ -9,7 +9,7 @@ from PIL import Image
 import heapq
 
 from database import EmbeddingsDB
-from encoders import ClipEncoder, BlipEncoder
+from encoders import ClipEncoder
 from utils import compute_similarity, get_similarity_func_id
 import time
 
@@ -37,7 +37,7 @@ class FusedSearcher:
     def __init__(
         self,
         embs_db: EmbeddingsDB,
-        encoder: Union[ClipEncoder, BlipEncoder],
+        encoder: ClipEncoder,
         batch_size: int = 2048,
     ):
 

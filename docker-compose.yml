@@ -1,6 +1,6 @@
 services:
   backend-api:
-    # tty: true
+    tty: true
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -11,15 +11,17 @@ services:
     
       - APP_NAME=ELO@AIC Image Semantic Search
       - gpt_translate_model=gpt-4o-mini
-      - ocr_path=/data/OCR_results
-      - object_counting_path=/data/obj_cnt_data
+      - ocr_path=
+      - object_counting_path=
       # empty string to deactivate
-      - asr_path=data/asr_processed
+      - asr_path=
       - blip2_embs_path=
       - clip_H_embs_path=
       - clip_bigG_embs_path=
-      - clip_B32_embs_path=data/keyframes_embs_clip_B32
-      - clip_S400M_embs_path=
+      - clip_B32_embs_path=
+      - clip_S400M_embs_path=${clip_S400M_embs_path}
+
+      - device=cpu
 
       # read from the .env file if exist
       - openai_api_key=${openai_api_key}
@@ -46,6 +48,7 @@ services:
     # remove the reload flag on production
     entrypoint: >
       conda run --no-capture-output -n py311 python -u -m uvicorn src.main:app --host 0.0.0.0 --port 8000 --workers 1 --reload
+
 
   elasticsearch:
     build:
