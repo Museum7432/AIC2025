@@ -23,7 +23,12 @@ class FTSearcher:
         # return topk instances with the minimum total
         # distance to all queries
 
+        start_time = time.time()
+
         sims, ids = self.db.db.search(v_queries, topk)
+
+        end_time = time.time()
+        print(f"vectors_search Runtime: {end_time - start_time} seconds")
 
         sims = sims.tolist()
         ids = ids.tolist()
@@ -56,9 +61,13 @@ class FTSearcher:
 
     def vectors_seq_search(self, v_queries, topk=5, min_item_dist=1, discount_rate=1):
 
+        start_time = time.time()
         sims, ids = self.db.db.seq_search(
             v_queries, topk, min_item_dist=min_item_dist, discount_rate=discount_rate
         )
+
+        end_time = time.time()
+        print(f"vectors_seq_search Runtime: {end_time - start_time} seconds")
 
         sims = sims.tolist()
         ids = ids.tolist()

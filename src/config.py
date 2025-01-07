@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     # data/object_location_data
     obj_loc_path: Union[str, None] = None
 
+    # clip_Med_embs_path: Union[str, None] = "data/embeddings/keyframes_embs_clip_Med"
+    clip_Med_embs_path: Union[str, None] = None
+
 
     # for testing
     # "data/keyframes_embs_clip_B32", "ViT-B-32", "openai"
