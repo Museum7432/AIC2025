@@ -32,6 +32,11 @@ class Settings(BaseSettings):
     color_code_path: Union[str, None] = "data/color_code_B32"
     obj_loc_path: Union[str, None] = "data/object_location_data"
 
+    # FOR VBS
+    # clip_Med_embs_path: Union[str, None] = "data/embeddings/keyframes_embs_clip_Med"
+    clip_Med_embs_path: Union[str, None] = None
+    marine_embs_path: Union[str, None] = None
+    v3c_embs_path: Union[str, None] = None
 
     # for testing
     # "data/keyframes_embs_clip_B32", "ViT-B-32", "openai"

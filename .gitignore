@@ -9,3 +9,5 @@ data
 .vscode/
 .env
 notebooks
+docker-compose-LHE.yaml
+docker-compose-Marine.yaml

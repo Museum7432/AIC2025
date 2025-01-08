@@ -4,7 +4,7 @@ import base64
 
 from .models import SingleTextQuery, SearchResult
 from searchers import Searchers, get_ft_searcher
-from helpers import gpt4_translate_vi2en
+from helpers import gpt4_translate_uni2en
 
 router = APIRouter(prefix="/search")
 
@@ -16,8 +16,8 @@ def search(request: SingleTextQuery):
 
     # vi2en translation
     # TODO: translation should be in a seperate api
-    if request.language == "Vie":
-        query = gpt4_translate_vi2en(query)
+    if request.language != "en":
+        query = gpt4_translate_uni2en(query)
         print("Gpt-4 output", query)
 
     topk = request.topk

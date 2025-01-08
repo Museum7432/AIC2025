@@ -92,7 +92,7 @@ def model_name_map(name):
         case "vit-Med":
             return "clip_Med"
         case _:
-            raise NotImplementedError()
+            return name
 
 
 def get_faiss_searcher(name):
@@ -117,122 +117,163 @@ def get_ft_searcher(name):
     return Searchers[f"{name}_ft"]
 
 
+# custom loader for VBS
 def load_seacher():
     re = {}
 
     print("preparing searchers!")
 
-    if settings.clip_B32_embs_path:
-        re.update(
-            load_model_FT(
-                prefix_name="B32",
-                embs_path=settings.clip_B32_embs_path,
-                clip_model=True,
-                model_arch="ViT-B-32",
-                pretrain_name="openai",
-                device=settings.device,
-                jit=True,
-            )
+    if settings.v3c_embs_path or settings.marine_embs_path:
+        encoder = ClipEncoder(
+            "ViT-H-14-378-quickgelu", "dfn5b", device=settings.device, jit=True
         )
 
-    if settings.ocr_path:
-        # ocr database
-        ocr_db = OcrDB(settings.ocr_path, remove_old_index=settings.remove_old_index)
-        ocr_searcher = OcrSearcher(ocr_db)
+    if settings.marine_embs_path:
+        marine_embdb = FTdb(settings.marine_embs_path)
 
-        re["ocr_searcher"] = ocr_searcher
-        print("OCR loaded!")
+        re["marine_ft"] = FTSearcher(marine_embdb, encoder)
 
-    if settings.object_counting_path:
-        # object counting database
-        obj_db = ObjectCountDB(settings.object_counting_path)
-        objcount_searcher = ObjectCountSearcher(obj_db)
+        print(f"{settings.marine_embs_path} load")
 
-        re["objcount_searcher"] = objcount_searcher
-        print("object counting loaded!")
-
-    if settings.asr_path:
-        asr_db = AsrDB(settings.asr_path, remove_old_index=settings.remove_old_index)
-        asr_searcher = AsrSearcher(asr_db)
-
-        re["asr_searcher"] = asr_searcher
-        print("ASR loaded!")
-
-    if settings.color_code_path:
-        objloc_db = ObjectLocationDB(settings.obj_loc_path, settings.color_code_path)
-
-        objloc_searcher = ObjectLocationSearcher(objloc_db)
-
-        re["obj_loc_searcher"] = objloc_searcher
-
-        print("obj location loaded!")
-
-    if settings.blip2_embs_path:
-        re.update(
-            load_model_FT(
-                prefix_name="blip2",
-                embs_path=settings.blip2_embs_path,
-                clip_model=False,
-                model_arch="blip2_feature_extractor",
-                pretrain_name="pretrain",
-                device=settings.device,
-            )
-        )
-
-    if settings.clip_S400M_embs_path:
-        re.update(
-            load_model_FT(
-                prefix_name="S400M",
-                embs_path=settings.clip_S400M_embs_path,
-                clip_model=True,
-                model_arch="ViT-SO400M-14-SigLIP-384",
-                pretrain_name="webli",
-                device=settings.device,
-                jit=False,
-            )
-        )
-
-    if settings.clip_H_embs_path:
-        re.update(
-            load_model_FT(
-                prefix_name="clip_H",
-                embs_path=settings.clip_H_embs_path,
-                clip_model=True,
-                model_arch="ViT-H-14-378-quickgelu",
-                pretrain_name="dfn5b",
-                device=settings.device,
-                jit=True,
-            )
-        )
-
-    if settings.clip_bigG_embs_path:
-        re.update(
-            load_model_FT(
-                prefix_name="clip_BigG",
-                embs_path=settings.clip_bigG_embs_path,
-                clip_model=True,
-                model_arch="ViT-bigG-14",
-                pretrain_name="laion2B-s39B-b160k",
-                device=settings.device,
-                jit=True,
-            )
-        )
-    
     if settings.clip_Med_embs_path:
-        re.update(
-            load_model(
-                prefix_name="clip_Med",
-                embs_path=settings.clip_Med_embs_path,
-                clip_model=True,
-                model_arch="hf-hub:luhuitong/CLIP-ViT-L-14-448px-MedICaT-ROCO",
-                pretrain_name="",
-                device=settings.device,
-                batch_size=2048,
-                jit=True,
-            )
+        med_embdb = FTdb(settings.clip_Med_embs_path)
+
+        med_encoder = ClipEncoder(
+            "hf-hub:luhuitong/CLIP-ViT-L-14-448px-MedICaT-ROCO",
+            "",
+            device=settings.device,
+            jit=True,
         )
 
+        re["clip_Med_ft"] = FTSearcher(med_embdb, med_encoder)
+
+        print(f"{settings.clip_Med_embs_path} load")
+
+    if settings.v3c_embs_path:
+        v3c_embdb = FTdb(settings.v3c_embs_path)
+
+        re["V3C_ft"] = FTSearcher(v3c_embdb, encoder)
+        print(f"{settings.clip_Med_embs_path} load")
+    
     return re
+
+
+# def load_seacher():
+#     re = {}
+
+#     print("preparing searchers!")
+
+#     if settings.clip_B32_embs_path:
+#         re.update(
+#             load_model_FT(
+#                 prefix_name="B32",
+#                 embs_path=settings.clip_B32_embs_path,
+#                 clip_model=True,
+#                 model_arch="ViT-B-32",
+#                 pretrain_name="openai",
+#                 device=settings.device,
+#                 jit=True,
+#             )
+#         )
+
+#     if settings.ocr_path:
+#         # ocr database
+#         ocr_db = OcrDB(settings.ocr_path, remove_old_index=settings.remove_old_index)
+#         ocr_searcher = OcrSearcher(ocr_db)
+
+#         re["ocr_searcher"] = ocr_searcher
+#         print("OCR loaded!")
+
+#     if settings.object_counting_path:
+#         # object counting database
+#         obj_db = ObjectCountDB(settings.object_counting_path)
+#         objcount_searcher = ObjectCountSearcher(obj_db)
+
+#         re["objcount_searcher"] = objcount_searcher
+#         print("object counting loaded!")
+
+#     if settings.asr_path:
+#         asr_db = AsrDB(settings.asr_path, remove_old_index=settings.remove_old_index)
+#         asr_searcher = AsrSearcher(asr_db)
+
+#         re["asr_searcher"] = asr_searcher
+#         print("ASR loaded!")
+
+#     if settings.color_code_path:
+#         objloc_db = ObjectLocationDB(settings.obj_loc_path, settings.color_code_path)
+
+#         objloc_searcher = ObjectLocationSearcher(objloc_db)
+
+#         re["obj_loc_searcher"] = objloc_searcher
+
+#         print("obj location loaded!")
+
+#     if settings.blip2_embs_path:
+#         re.update(
+#             load_model_FT(
+#                 prefix_name="blip2",
+#                 embs_path=settings.blip2_embs_path,
+#                 clip_model=False,
+#                 model_arch="blip2_feature_extractor",
+#                 pretrain_name="pretrain",
+#                 device=settings.device,
+#             )
+#         )
+
+#     if settings.clip_S400M_embs_path:
+#         re.update(
+#             load_model_FT(
+#                 prefix_name="S400M",
+#                 embs_path=settings.clip_S400M_embs_path,
+#                 clip_model=True,
+#                 model_arch="ViT-SO400M-14-SigLIP-384",
+#                 pretrain_name="webli",
+#                 device=settings.device,
+#                 jit=False,
+#             )
+#         )
+
+#     if settings.clip_H_embs_path:
+#         re.update(
+#             load_model_FT(
+#                 prefix_name="clip_H",
+#                 embs_path=settings.clip_H_embs_path,
+#                 clip_model=True,
+#                 model_arch="ViT-H-14-378-quickgelu",
+#                 pretrain_name="dfn5b",
+#                 device=settings.device,
+#                 jit=True,
+#             )
+#         )
+
+#     if settings.clip_bigG_embs_path:
+#         re.update(
+#             load_model_FT(
+#                 prefix_name="clip_BigG",
+#                 embs_path=settings.clip_bigG_embs_path,
+#                 clip_model=True,
+#                 model_arch="ViT-bigG-14",
+#                 pretrain_name="laion2B-s39B-b160k",
+#                 device=settings.device,
+#                 jit=True,
+#             )
+#         )
+
+#     if settings.clip_Med_embs_path:
+#         re.update(
+#             load_model_FT(
+#                 prefix_name="clip_Med",
+#                 embs_path=settings.clip_Med_embs_path,
+#                 clip_model=True,
+#                 model_arch="hf-hub:luhuitong/CLIP-ViT-L-14-448px-MedICaT-ROCO",
+#                 pretrain_name="",
+#                 device=settings.device,
+#                 batch_size=2048,
+#                 jit=True,
+#             )
+#         )
+
+#     return re
 
 
 # will be loaded on app startup
